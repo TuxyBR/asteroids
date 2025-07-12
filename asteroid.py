@@ -11,7 +11,7 @@ class Asteroid(CircleShape):
     self.rotation_speed = random.randrange(-15, 15)
     
     self.sides = random.randrange(8, 20)
-    self.jaggedness = random.uniform(0.3, 0.5)
+    self.jaggedness = random.uniform(0.2, 0.4)
     self.points = self.rand_polygon()
   
   def rand_polygon(self):
@@ -44,17 +44,15 @@ class Asteroid(CircleShape):
   
   def split(self):
     score = int(ASTEROID_MAX_RADIUS - self.radius + ASTEROID_MIN_RADIUS)
-    print(f"added {score} to score")
     self.kill()
     angle = random.uniform(20, 50)
-    if self.radius > ASTEROID_MIN_RADIUS:
-      asteroid_amount = random.randrange(2, 4)
+    if self.radius > ASTEROID_MIN_RADIUS*2:
+      asteroid_amount = random.randrange(2, 3)
       for _ in range(asteroid_amount):
         new_vector = self.velocity.rotate(angle)
         angle *= random.uniform(1, 2)
-        intermediary_radius = self.radius - (random.uniform(10, 15) * (asteroid_amount - 1))
-        new_radius = intermediary_radius if intermediary_radius > ASTEROID_MIN_RADIUS else ASTEROID_MIN_RADIUS
+        new_radius = (self.radius / asteroid_amount) + (random.uniform(-5, 5))
         new_asteroid = Asteroid(self.position.x, self.position.y, new_radius)
-        new_asteroid.velocity = new_vector * random.uniform(0.7, 1.4)
+        new_asteroid.velocity = new_vector * random.uniform(1, 1.6)
     return(score)
         
