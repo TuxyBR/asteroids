@@ -23,14 +23,14 @@ def main():
   
   dt = 0
   fps_limit = 60
-  fps = pygame.time.Clock()
+  clock = pygame.time.Clock()
   
   screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
   player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
   asteroid_field = AsteroidField()
 
   while True:
-    pygame.display.set_caption(f"Asteroids - FPS: {fps}")
+    pygame.display.set_caption(f"Asteroids - FPS: {clock.get_fps():.2f}")
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
@@ -48,7 +48,7 @@ def main():
     for drawable in draw_group:
       drawable.draw(screen)
 
-    dt = fps.tick(fps_limit) / 1000
+    dt = clock.tick(fps_limit) / 1000
     pygame.display.flip()
 
 
