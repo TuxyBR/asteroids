@@ -19,6 +19,7 @@ def main():
         return
 
     screen.fill("black")
+    player.update(dt)
     player.draw(screen)
 
     dt = fps.tick(fps_limit) / 1000
