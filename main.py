@@ -22,6 +22,7 @@ def main():
   Shot.containers = (shot_group, update_group, draw_group)
   
   dt = 0
+  score = 0
   fps_limit = 60
   clock = pygame.time.Clock()
   
@@ -30,7 +31,8 @@ def main():
   asteroid_field = AsteroidField()
 
   while True:
-    pygame.display.set_caption(f"Asteroids - FPS: {clock.get_fps():.2f}")
+    pygame.display.set_caption(f"Asteroids by TuxyBR - Score: {score}")
+
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
@@ -39,11 +41,11 @@ def main():
     update_group.update(dt)
     for asteroid in asteroid_group:
       if asteroid.colision(player):
-        print("Game Over!")
+        print(f"Game Over! - Final score: {score}")
         sys.exit()
       for shot in shot_group:
         if asteroid.colision(shot):
-          asteroid.split()
+          score += asteroid.split()
           shot.kill()
     for drawable in draw_group:
       drawable.draw(screen)
