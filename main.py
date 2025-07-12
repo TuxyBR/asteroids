@@ -6,6 +6,9 @@ from player import Player
 
 def main():
   pygame.init()
+  update_group = pygame.sprite.Group()
+  draw_group = pygame.sprite.Group()
+  Player.containers = (update_group, draw_group)
   fps = pygame.time.Clock()
   dt = 0
   fps_limit = 60
@@ -19,8 +22,9 @@ def main():
         return
 
     screen.fill("black")
-    player.update(dt)
-    player.draw(screen)
+    update_group.update(dt)
+    for drawable in draw_group:
+      drawable.draw(screen)
 
     dt = fps.tick(fps_limit) / 1000
     pygame.display.flip()
