@@ -3,20 +3,26 @@ from constants import *
 import pygame
 
 from player import Player
+from asteroid import Asteroid
+from asteroidfield import AsteroidField
 
 def main():
   pygame.init()
   update_group = pygame.sprite.Group()
   draw_group = pygame.sprite.Group()
+  asteroid_group = pygame.sprite.Group()
   Player.containers = (update_group, draw_group)
+  Asteroid.containers = (asteroid_group, update_group, draw_group)
+  AsteroidField.containers = (update_group)
   fps = pygame.time.Clock()
   dt = 0
   fps_limit = 60
   screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
   player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+  asteroid_field = AsteroidField()
 
   while True:
-    pygame.display.set_caption(f"Asteroids - Frame: {fps}")
+    pygame.display.set_caption(f"Asteroids - FPS: {fps}")
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
