@@ -1,6 +1,7 @@
-from constants import *
-
+import sys
 import pygame
+
+from constants import *
 
 from player import Player
 from asteroid import Asteroid
@@ -29,6 +30,10 @@ def main():
 
     screen.fill("black")
     update_group.update(dt)
+    for colision in asteroid_group:
+      if colision.colision(player):
+        print("Game Over!")
+        sys.exit()
     for drawable in draw_group:
       drawable.draw(screen)
 

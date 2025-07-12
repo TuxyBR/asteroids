@@ -8,7 +8,7 @@ class Asteroid(CircleShape):
     self.rotation = 0
     self.move_direction = 0
   
-  def draw(self, screen):
+  def draw(self, screen): #TODO: sprite based system
     pygame.draw.circle(screen, "white", self.position, self.radius, 2)
     
   def update(self, dt):
