@@ -7,25 +7,28 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
+from explosion import Explosion
 
 def main():
   pygame.init()
-  
+
   update_group = pygame.sprite.Group()
   draw_group = pygame.sprite.Group()
   asteroid_group = pygame.sprite.Group()
   shot_group = pygame.sprite.Group()
-  
+
   Player.containers = (update_group, draw_group)
   Asteroid.containers = (asteroid_group, update_group, draw_group)
   AsteroidField.containers = (update_group)
   Shot.containers = (shot_group, update_group, draw_group)
-  
+  Explosion.containers = (update_group, draw_group)
+
   dt = 0
   score = 0
   fps_limit = 60
   clock = pygame.time.Clock()
-  
+  explosions = []
+
   screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
   player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
   asteroid_field = AsteroidField()
@@ -41,6 +44,7 @@ def main():
 
     screen.fill("black")
     update_group.update(dt)
+
     for asteroid in asteroid_group:
       if asteroid.colision(player):
         print(f"Game Over! - Final score: {score}")
@@ -48,7 +52,15 @@ def main():
       for shot in shot_group:
         if asteroid.colision(shot):
           score += asteroid.split()
+          explosions.append(Explosion(asteroid.position))
           shot.kill()
+
+    effect = []
+    for explosion in explosions:
+        if not explosion.is_dead():
+            effect.append(explosion)
+    explosions[:] = effect
+
     for drawable in draw_group:
       drawable.draw(screen)
     screen.blit(score_text, (30, SCREEN_HEIGHT - text_rect.height - 15))
