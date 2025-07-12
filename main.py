@@ -37,10 +37,14 @@ def main():
 
     screen.fill("black")
     update_group.update(dt)
-    for colision in asteroid_group:
-      if colision.colision(player):
+    for asteroid in asteroid_group:
+      if asteroid.colision(player):
         print("Game Over!")
         sys.exit()
+      for shot in shot_group:
+        if asteroid.colision(shot):
+          asteroid.kill()
+          shot.kill()
     for drawable in draw_group:
       drawable.draw(screen)
 
