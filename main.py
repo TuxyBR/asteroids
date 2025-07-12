@@ -29,10 +29,12 @@ def main():
   screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
   player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
   asteroid_field = AsteroidField()
+  font = pygame.font.SysFont("monospace", 36, bold=True)
 
   while True:
     pygame.display.set_caption(f"Asteroids by TuxyBR - Score: {score}")
-
+    score_text = font.render(f"Score: {score}", True, "gray")
+    text_rect = score_text.get_rect()
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
@@ -49,6 +51,7 @@ def main():
           shot.kill()
     for drawable in draw_group:
       drawable.draw(screen)
+    screen.blit(score_text, (30, SCREEN_HEIGHT - text_rect.height - 15))
 
     dt = clock.tick(fps_limit) / 1000
     pygame.display.flip()
