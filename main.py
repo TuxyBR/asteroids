@@ -1,9 +1,9 @@
 import pygame
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from game_over import TelaGameOver
-from game_screen import TelaJogo
-from menu_screen import TelaMenu
+from telas.game_over import TelaGameOver
+from telas.game_screen import TelaJogo
+from telas.menu_screen import TelaMenu
 
 
 def resolve_transition(transition):
