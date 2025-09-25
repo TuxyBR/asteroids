@@ -6,7 +6,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 class TelaMenu:
 
   def __init__(self):
-    self.menu_options = ["Play", "Quit"]
+    self.menu_options = ["Play", "Multiplayer", "Scores", "Quit"] #TODO: implement multiplayer and scores
     self.selected_option = 0
 
     self.title_font = pygame.font.SysFont("monospace", 72, bold=True)
@@ -38,11 +38,16 @@ class TelaMenu:
     surface.fill("black")
 
     title_text = self.title_font.render("ASTEROIDS", True, "white")
-    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
+    title_rect = title_text.get_rect(center=((SCREEN_WIDTH // 2), SCREEN_HEIGHT // 5))
     surface.blit(title_text, title_rect)
+    
+    menu_x = 80
+    menu_y = SCREEN_HEIGHT-80
+    item_spacing = 48
 
     for index, option in enumerate(self.menu_options):
       color = "white" if index == self.selected_option else "gray"
       option_surface = self.menu_font.render(option, True, color)
-      option_rect = option_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + index * 70))
+      offset = len(self.menu_options) - index - 1
+      option_rect = option_surface.get_rect(midleft=(menu_x, (menu_y - offset * item_spacing)))
       surface.blit(option_surface, option_rect)
