@@ -1,9 +1,9 @@
 import pygame
 import random
-from circleshape import CircleShape
-from constants import ASTEROID_MIN_RADIUS, ASTEROID_MAX_RADIUS
+from .circle_shape import FormaCirculo
+from constants import MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 
-class Asteroid(CircleShape):
+class Asteroid(FormaCirculo):
   def __init__(self, x, y, radius):
     super().__init__(x, y, radius)
     
@@ -12,9 +12,9 @@ class Asteroid(CircleShape):
     
     self.sides = random.randrange(8, 20)
     self.jaggedness = random.uniform(0.2, 0.4)
-    self.points = self.rand_polygon()
+    self.points = self.rng_polygon()
   
-  def rand_polygon(self):
+  def rng_polygon(self):
     points = []
     angle_step = 360 / self.sides
     for i in range(self.sides):
@@ -43,10 +43,10 @@ class Asteroid(CircleShape):
     self.rotation += (self.rotation_speed * dt) % 360
   
   def split(self):
-    score = int(ASTEROID_MAX_RADIUS - self.radius + ASTEROID_MIN_RADIUS)
+    score = int(MAX_ASTEROID_RADIUS - self.radius + MIN_ASTEROID_RADIUS)
     self.kill()
     angle = random.uniform(20, 50)
-    if self.radius > ASTEROID_MIN_RADIUS*2:
+    if self.radius > MIN_ASTEROID_RADIUS * 2:
       asteroid_amount = random.randrange(2, 3)
       for _ in range(asteroid_amount):
         new_vector = self.velocity.rotate(angle)
