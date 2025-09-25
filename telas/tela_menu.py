@@ -1,6 +1,6 @@
 import pygame
 
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import LARGURA_TELA, ALTURA_TELA
 
 
 class TelaMenu:
@@ -38,11 +38,11 @@ class TelaMenu:
     surface.fill("black")
 
     title_text = self.title_font.render("ASTEROIDS", True, "white")
-    title_rect = title_text.get_rect(center=((SCREEN_WIDTH // 2), SCREEN_HEIGHT // 5))
+    title_rect = title_text.get_rect(center=((LARGURA_TELA // 2), ALTURA_TELA // 5))
     surface.blit(title_text, title_rect)
     
     menu_x = 80
-    menu_y = SCREEN_HEIGHT-80
+    menu_y = ALTURA_TELA-80
     item_spacing = 48
 
     for index, option in enumerate(self.menu_options):

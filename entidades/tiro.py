@@ -1,10 +1,10 @@
 import pygame
-from .circleshape import CircleShape
-from constants import SHOT_RADIUS
+from .formaCirculo import FormaCirculo
+from constants import TAMANHO_TIRO
 
-class Shot(CircleShape):
+class Tiro(FormaCirculo):
   def __init__(self, x, y):
-    super().__init__(x, y, SHOT_RADIUS)
+    super().__init__(x, y, TAMANHO_TIRO)
   
   def draw(self, screen):
     pygame.draw.circle(screen, "white", self.position, self.radius, 2)
@@ -13,7 +13,7 @@ class Shot(CircleShape):
     self.move(dt)
     
   def move(self, dt):
-    self.position += self.velocity * dt
+    self.position += self.velocidade * dt
     
   def rotate(self, dt):
     pass

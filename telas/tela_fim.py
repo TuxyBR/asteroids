@@ -1,6 +1,6 @@
 import pygame
 
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from constants import LARGURA_TELA, ALTURA_TELA
 
 
 class TelaGameOver:
@@ -29,13 +29,13 @@ class TelaGameOver:
     surface.fill("black")
 
     title_text = self.title_font.render("GAME OVER", True, "white")
-    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
+    title_rect = title_text.get_rect(center=(LARGURA_TELA // 2, ALTURA_TELA // 3))
     surface.blit(title_text, title_rect)
 
     score_surface = self.menu_font.render(f"Final Score: {self.final_score}", True, "gray")
-    score_rect = score_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+    score_rect = score_surface.get_rect(center=(LARGURA_TELA // 2, ALTURA_TELA // 2))
     surface.blit(score_surface, score_rect)
 
     prompt_surface = self.hud_font.render("Press Enter or Spacebar to return", True, "darkgray")
-    prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH // 2, int(SCREEN_HEIGHT * 0.8)))
+    prompt_rect = prompt_surface.get_rect(center=(LARGURA_TELA // 2, int(ALTURA_TELA * 0.8)))
     surface.blit(prompt_surface, prompt_rect)

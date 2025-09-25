@@ -1,12 +1,12 @@
 import pygame
 
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from entidades.player import Player
+from constants import LARGURA_TELA, ALTURA_TELA
+from entidades.jogador import Jogador
 from entidades.asteroid import Asteroid
-from entidades.asteroidfield import AsteroidField
-from entidades.shot import Shot
-from entidades.explosion import Explosion
-from telas.pause_menu import MenuPause
+from entidades.campoAsteroids import CampoAsteroids
+from entidades.tiro import Tiro
+from entidades.particulasExplosao import Explosao
+from telas.tela_menu_pause import MenuPause
 
 
 class TelaJogo:
@@ -17,14 +17,14 @@ class TelaJogo:
     self.asteroid_group = pygame.sprite.Group()
     self.shot_group = pygame.sprite.Group()
 
-    Player.containers = (self.update_group, self.draw_group)
+    Jogador.containers = (self.update_group, self.draw_group)
     Asteroid.containers = (self.asteroid_group, self.update_group, self.draw_group)
-    AsteroidField.containers = self.update_group
-    Shot.containers = (self.shot_group, self.update_group, self.draw_group)
-    Explosion.containers = (self.update_group, self.draw_group)
+    CampoAsteroids.containers = self.update_group
+    Tiro.containers = (self.shot_group, self.update_group, self.draw_group)
+    Explosao.containers = (self.update_group, self.draw_group)
 
-    self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    self.asteroid_field = AsteroidField()
+    self.player = Jogador(LARGURA_TELA / 2, ALTURA_TELA / 2)
+    self.asteroid_field = CampoAsteroids()
 
     self.players = [self.player]
     self.explosions = []
@@ -85,7 +85,7 @@ class TelaJogo:
       for shot in list(self.shot_group):
         if asteroid.colision(shot):
           self.score += asteroid.split()
-          self.explosions.append(Explosion(asteroid.position))
+          self.explosions.append(Explosao(asteroid.position))
           shot.kill()
 
     self.explosions = [explosion for explosion in self.explosions if not explosion.is_dead()]
@@ -100,10 +100,10 @@ class TelaJogo:
 
     score_text = self.hud_font.render(f"Score: {self.score}", True, "gray")
     text_rect = score_text.get_rect()
-    surface.blit(score_text, (30, SCREEN_HEIGHT - text_rect.height - 15))
+    surface.blit(score_text, (30, ALTURA_TELA - text_rect.height - 15))
 
     if self.pause_menu is not None:
-      overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+      overlay = pygame.Surface((LARGURA_TELA, ALTURA_TELA), pygame.SRCALPHA)
       overlay.fill((0, 0, 0, 180))
       surface.blit(overlay, (0, 0))
       self.pause_menu.draw(surface)

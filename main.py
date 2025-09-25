@@ -1,12 +1,12 @@
 import pygame
 
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from telas.game_over import TelaGameOver
-from telas.game_screen import TelaJogo
-from telas.menu_screen import TelaMenu
+from constants import LARGURA_TELA, ALTURA_TELA
+from telas.tela_fim import TelaGameOver
+from telas.tela_jogo import TelaJogo
+from telas.tela_menu import TelaMenu
 
 
-def resolve_transition(transition):
+def troca_tela(transition):
   action, payload = transition
 
   if action == "quit":
@@ -25,7 +25,7 @@ def resolve_transition(transition):
 def main():
   pygame.init()
 
-  surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+  surface = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
   clock = pygame.time.Clock()
   fps_limit = 60
 
@@ -40,7 +40,7 @@ def main():
 
       transition = current_screen.handle_event(event)
       if transition is not None:
-        next_screen = resolve_transition(transition)
+        next_screen = troca_tela(transition)
         if next_screen is None:
           return
         current_screen = next_screen
@@ -54,7 +54,7 @@ def main():
 
     transition = current_screen.update(dt)
     if transition is not None:
-      next_screen = resolve_transition(transition)
+      next_screen = troca_tela(transition)
       if next_screen is None:
         return
       current_screen = next_screen

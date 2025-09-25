@@ -1,6 +1,6 @@
 import pygame
 
-class CircleShape(pygame.sprite.Sprite):
+class FormaCirculo(pygame.sprite.Sprite):
     def __init__(self, x, y, radius):
         # we will be using this later
         if hasattr(self, "containers"):
@@ -9,7 +9,7 @@ class CircleShape(pygame.sprite.Sprite):
             super().__init__()
 
         self.position = pygame.Vector2(x, y)
-        self.velocity = pygame.Vector2(0, 0)
+        self.velocidade = pygame.Vector2(0, 0)
         self.radius = radius
 
     def draw(self, screen):

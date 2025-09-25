@@ -4,26 +4,26 @@ from .asteroid import Asteroid
 from constants import *
 
 
-class AsteroidField(pygame.sprite.Sprite):
+class CampoAsteroids(pygame.sprite.Sprite):
     edges = [
         [
             pygame.Vector2(1, 0),
-            lambda y: pygame.Vector2(-ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT),
+            lambda y: pygame.Vector2(-MAIOR_ASTEROID, y * ALTURA_TELA),
         ],
         [
             pygame.Vector2(-1, 0),
             lambda y: pygame.Vector2(
-                SCREEN_WIDTH + ASTEROID_MAX_RADIUS, y * SCREEN_HEIGHT
+                LARGURA_TELA + MAIOR_ASTEROID, y * ALTURA_TELA
             ),
         ],
         [
             pygame.Vector2(0, 1),
-            lambda x: pygame.Vector2(x * SCREEN_WIDTH, -ASTEROID_MAX_RADIUS),
+            lambda x: pygame.Vector2(x * LARGURA_TELA, -MAIOR_ASTEROID),
         ],
         [
             pygame.Vector2(0, -1),
             lambda x: pygame.Vector2(
-                x * SCREEN_WIDTH, SCREEN_HEIGHT + ASTEROID_MAX_RADIUS
+                x * LARGURA_TELA, ALTURA_TELA + MAIOR_ASTEROID
             ),
         ],
     ]
@@ -38,7 +38,7 @@ class AsteroidField(pygame.sprite.Sprite):
 
     def update(self, dt):
         self.spawn_timer += dt
-        if self.spawn_timer > ASTEROID_SPAWN_RATE:
+        if self.spawn_timer > TEMPO_DE_GERACAO_ASTEROID:
             self.spawn_timer = 0
 
             edge = random.choice(self.edges)
@@ -46,4 +46,4 @@ class AsteroidField(pygame.sprite.Sprite):
             velocity = edge[0] * speed
             velocity = velocity.rotate(random.randint(-30, 30))
             position = edge[1](random.uniform(0, 1))
-            self.spawn(random.randint(ASTEROID_MIN_RADIUS, ASTEROID_MAX_RADIUS), position, velocity)
+            self.spawn(random.randint(MENOR_ASTEROID, MAIOR_ASTEROID), position, velocity)
