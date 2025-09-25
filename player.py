@@ -4,10 +4,15 @@ from constants import PLAYER_RADIUS, PLAYER_SHOT_SPEED, PLAYER_TURN_SPEED, PLAYE
 from shot import Shot
 
 class Player(CircleShape):
-  def __init__(self, x, y):
+  def __init__(self, x, y, *, color="white", is_local=True, player_id=None, on_shoot=None):
     super().__init__(x, y, PLAYER_RADIUS)
     self.rotation = 0
     self.shot_cooldown = 0
+    self.color = color
+    self.is_local = is_local
+    self.player_id = player_id
+    self._on_shoot = on_shoot
+    self.alive = True
 
   def triangle(self):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -18,12 +23,16 @@ class Player(CircleShape):
     return [a, b, c]
   
   def draw(self, screen):
-    pygame.draw.polygon(screen, "white", self.triangle(), 2)
+    if not self.alive:
+      return
+    pygame.draw.polygon(screen, self.color, self.triangle(), 2)
     
   def rotate(self, dt):
     self.rotation += PLAYER_TURN_SPEED * dt
     
   def update(self, dt):
+    if not self.is_local or not self.alive:
+      return
     keys = pygame.key.get_pressed()
 
     if self.shot_cooldown > 0:
@@ -47,7 +56,18 @@ class Player(CircleShape):
     self.position += forward * PLAYER_SPEED * dt
     
   def shoot(self):
+    # If an external shoot handler is set, use it to decide how to shoot
+    if self._on_shoot is not None:
+      handled = self._on_shoot(self)
+      if handled:
+        self.shot_cooldown = 0.3
+        return
     shot = Shot(self.position[0], self.position[1])
     shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
     self.shot_cooldown = 0.3
+
+  def die(self):
+    self.alive = False
+    # remove from sprite groups so it no longer updates/draws
+    self.kill()
     

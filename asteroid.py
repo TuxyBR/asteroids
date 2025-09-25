@@ -4,8 +4,14 @@ from circleshape import CircleShape
 from constants import ASTEROID_MIN_RADIUS, ASTEROID_MAX_RADIUS
 
 class Asteroid(CircleShape):
-  def __init__(self, x, y, radius):
+  _id_counter = 1
+  def __init__(self, x, y, radius, *, asteroid_id=None, host_controlled=True):
     super().__init__(x, y, radius)
+    if asteroid_id is None:
+      asteroid_id = Asteroid._id_counter
+      Asteroid._id_counter += 1
+    self.asteroid_id = asteroid_id
+    self.host_controlled = host_controlled
     
     self.rotation = 0
     self.rotation_speed = random.randrange(-15, 15)
@@ -33,8 +39,9 @@ class Asteroid(CircleShape):
 
     
   def update(self, dt):
-    self.rotate(dt)
-    self.move(dt)
+    if self.host_controlled:
+      self.rotate(dt)
+      self.move(dt)
     
   def move(self, dt):
     self.position += self.velocity * dt
