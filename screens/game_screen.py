@@ -3,7 +3,7 @@ import pygame
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from entities.player import Jogador
 from entities.asteroid import Asteroid
-from entities.asteroid_field import CampoAsteroids
+from entities.asteroid_field import AsteroidField
 from entities.shot import Tiro
 from entities.explosion import Explosao
 from screens.pause_menu import MenuPause
@@ -11,7 +11,7 @@ from screens.pause_menu import MenuPause
 
 class GameScreen:
 
-  def __init__(self):
+  def __init__(self, asteroid_field=None):
     self.update_group = pygame.sprite.Group()
     self.draw_group = pygame.sprite.Group()
     self.asteroid_group = pygame.sprite.Group()
@@ -19,12 +19,15 @@ class GameScreen:
 
     Jogador.containers = (self.update_group, self.draw_group)
     Asteroid.containers = (self.asteroid_group, self.update_group, self.draw_group)
-    CampoAsteroids.containers = self.update_group
     Tiro.containers = (self.shot_group, self.update_group, self.draw_group)
     Explosao.containers = (self.update_group, self.draw_group)
 
     self.player = Jogador(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    self.asteroid_field = CampoAsteroids()
+    self.asteroid_field = asteroid_field
+    if self.asteroid_field is None:
+      self.asteroid_field = AsteroidField(self.update_group)
+    else:
+      self.asteroid_field.add(self.update_group)
 
     self.players = [self.player]
     self.explosions = []

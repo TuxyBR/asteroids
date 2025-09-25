@@ -65,7 +65,7 @@ def record_score(score: int, name: str) -> None:
     ScoreEntry(
       name=(name or "???").strip() or "???",
       score=value,
-      timestamp=datetime.now().strftime("%H:%M %d/%m/%Y "),
+      timestamp=datetime.now().strftime("%M:%H - %d/%m/%Y "),
     )
   )
 

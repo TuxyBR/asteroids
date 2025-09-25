@@ -1,10 +1,17 @@
 import pygame
 import random
+
 from .asteroid import Asteroid
-from constants import *
+from constants import (
+    ASTEROID_SPAWN_INTERVAL,
+    MAX_ASTEROID_RADIUS,
+    MIN_ASTEROID_RADIUS,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+)
 
 
-class CampoAsteroids(pygame.sprite.Sprite):
+class AsteroidField(pygame.sprite.Sprite):
     edges = [
         [
             pygame.Vector2(1, 0),
@@ -28,8 +35,8 @@ class CampoAsteroids(pygame.sprite.Sprite):
         ],
     ]
 
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self, self.containers)
+    def __init__(self, *groups):
+        super().__init__(*groups)
         self.spawn_timer = 0.0
 
     def spawn(self, radius, position, velocity):

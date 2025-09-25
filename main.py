@@ -18,7 +18,7 @@ def switch_screen(transition):
     return GameScreen()
   if action == "game_over":
     final_score = 0 if payload is None else payload.get("score", 0)
-    if should_record(final_score):
+    if final_score > 0 and should_record(final_score):
       return ScoreEntryScreen(final_score)
     return GameOverScreen(final_score)
   if action in ("score_saved", "score_skipped"):
