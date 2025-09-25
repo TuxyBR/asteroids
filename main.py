@@ -1,71 +1,66 @@
-import sys
 import pygame
 
-from constants import *
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from game_over import TelaGameOver
+from game_screen import TelaJogo
+from menu_screen import TelaMenu
 
-from player import Player
-from asteroid import Asteroid
-from asteroidfield import AsteroidField
-from shot import Shot
-from explosion import Explosion
+
+def resolve_transition(transition):
+  action, payload = transition
+
+  if action == "quit":
+    return None
+  if action == "start_game":
+    return TelaJogo()
+  if action == "game_over":
+    final_score = 0 if payload is None else payload.get("score", 0)
+    return TelaGameOver(final_score)
+  if action == "return_to_menu":
+    return TelaMenu()
+
+  raise ValueError(f"Unknown transition action: {action}")
+
 
 def main():
   pygame.init()
 
-  update_group = pygame.sprite.Group()
-  draw_group = pygame.sprite.Group()
-  asteroid_group = pygame.sprite.Group()
-  shot_group = pygame.sprite.Group()
-
-  Player.containers = (update_group, draw_group)
-  Asteroid.containers = (asteroid_group, update_group, draw_group)
-  AsteroidField.containers = (update_group)
-  Shot.containers = (shot_group, update_group, draw_group)
-  Explosion.containers = (update_group, draw_group)
-
-  dt = 0
-  score = 0
-  fps_limit = 60
+  surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
   clock = pygame.time.Clock()
-  explosions = []
+  fps_limit = 60
 
-  screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-  player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-  asteroid_field = AsteroidField()
-  font = pygame.font.SysFont("monospace", 36, bold=True)
+  current_screen = TelaMenu()
 
   while True:
-    pygame.display.set_caption(f"Asteroids by TuxyBR - Score: {score}")
-    score_text = font.render(f"Score: {score}", True, "gray")
-    text_rect = score_text.get_rect()
+    screen_changed = False
+
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
 
-    screen.fill("black")
-    update_group.update(dt)
-
-    for asteroid in asteroid_group:
-      if asteroid.colision(player):
-        print(f"Game Over! - Final score: {score}")
-        sys.exit()
-      for shot in shot_group:
-        if asteroid.colision(shot):
-          score += asteroid.split()
-          explosions.append(Explosion(asteroid.position))
-          shot.kill()
-
-    effect = []
-    for explosion in explosions:
-        if not explosion.is_dead():
-            effect.append(explosion)
-    explosions[:] = effect
-
-    for drawable in draw_group:
-      drawable.draw(screen)
-    screen.blit(score_text, (30, SCREEN_HEIGHT - text_rect.height - 15))
+      transition = current_screen.handle_event(event)
+      if transition is not None:
+        next_screen = resolve_transition(transition)
+        if next_screen is None:
+          return
+        current_screen = next_screen
+        screen_changed = True
+        break
 
     dt = clock.tick(fps_limit) / 1000
+
+    if screen_changed:
+      continue
+
+    transition = current_screen.update(dt)
+    if transition is not None:
+      next_screen = resolve_transition(transition)
+      if next_screen is None:
+        return
+      current_screen = next_screen
+      continue
+
+    current_screen.draw(surface)
     pygame.display.flip()
 
 
