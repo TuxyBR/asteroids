@@ -4,7 +4,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from services.score_manager import load_scores
 
 
-class TelaPlacar:
+class ScoreScreen:
 
   def __init__(self):
     self.title_font = pygame.font.SysFont("monospace", 72, bold=True)
@@ -23,18 +23,17 @@ class TelaPlacar:
     return None
 
   def update(self, dt):
-    pygame.display.set_caption("Asteroids by TuxyBR - Scores")
     return None
 
   def draw(self, surface):
     surface.fill("black")
 
-    title_surface = self.title_font.render("PLACAR", True, "white")
+    title_surface = self.title_font.render("SCORES", True, "white")
     title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 5))
     surface.blit(title_surface, title_rect)
 
     if not self.records:
-      empty_surface = self.row_font.render("Sem registros", True, "gray")
+      empty_surface = self.row_font.render("No Scores Set", True, "gray")
       empty_rect = empty_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
       surface.blit(empty_surface, empty_rect)
     else:
@@ -48,6 +47,6 @@ class TelaPlacar:
         row_rect = row_surface.get_rect(center=(SCREEN_WIDTH // 2, start_y + (index - 1) * spacing))
         surface.blit(row_surface, row_rect)
 
-    hint_surface = self.hint_font.render("Pressione Enter ou Esc para voltar", True, "darkgray")
+    hint_surface = self.hint_font.render("Press ESC or ENTER to return", True, "darkgray")
     hint_rect = hint_surface.get_rect(center=(SCREEN_WIDTH // 2, int(SCREEN_HEIGHT * 0.85)))
     surface.blit(hint_surface, hint_rect)

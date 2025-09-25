@@ -4,7 +4,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from services.score_manager import record_score
 
 
-class TelaRegistraPlacar:
+class NewScoreScreen:
 
   def __init__(self, score):
     self.score = score
@@ -36,17 +36,16 @@ class TelaRegistraPlacar:
     return None
 
   def update(self, dt):
-    pygame.display.set_caption("Asteroids - Novo Recorde")
     return None
 
   def draw(self, surface):
     surface.fill("black")
 
-    title_surface = self.title_font.render("NOVO RECORDE!", True, "white")
+    title_surface = self.title_font.render("HIGH SCORE!", True, "white")
     title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
     surface.blit(title_surface, title_rect)
 
-    score_text = self.text_font.render(f"Pontuacao: {self.score}", True, "gray")
+    score_text = self.text_font.render(f"Score: {self.score}", True, "gray")
     score_rect = score_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40))
     surface.blit(score_text, score_rect)
 
@@ -54,6 +53,6 @@ class TelaRegistraPlacar:
     name_rect = name_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 30))
     surface.blit(name_surface, name_rect)
 
-    hint_surface = self.hint_font.render("Digite seu nome e pressione Enter (Esc para pular)", True, "darkgray")
+    hint_surface = self.hint_font.render("Name yourself and press ENTER or press ESC to skip", True, "darkgray")
     hint_rect = hint_surface.get_rect(center=(SCREEN_WIDTH // 2, int(SCREEN_HEIGHT * 0.75)))
     surface.blit(hint_surface, hint_rect)

@@ -3,7 +3,7 @@ import pygame
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
-class TelaMenu:
+class MenuScreen:
 
   def __init__(self):
     self.menu_options = ["Play", "Multiplayer", "Scores", "Quit"] #TODO: implement multiplayer and scores

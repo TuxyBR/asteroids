@@ -1,11 +1,11 @@
 import pygame
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from screens.game_over_screen import TelaGameOver
-from screens.game_screen import TelaJogo
-from screens.menu_screen import TelaMenu
-from screens.scoreboard_screen import TelaPlacar
-from screens.score_entry_screen import TelaRegistraPlacar
+from screens.game_over_screen import GameOverScreen
+from screens.game_screen import GameScreen
+from screens.menu_screen import MenuScreen
+from screens.scoreboard_screen import ScoreScreen
+from screens.score_entry_screen import NewScoreScreen
 from services.score_manager import should_record
 
 
@@ -15,19 +15,19 @@ def switch_screen(transition):
   if action == "quit":
     return None
   if action == "start_game":
-    return TelaJogo()
+    return GameScreen()
   if action == "game_over":
     final_score = 0 if payload is None else payload.get("score", 0)
     if should_record(final_score):
-      return TelaRegistraPlacar(final_score)
-    return TelaGameOver(final_score)
+      return NewScoreScreen(final_score)
+    return GameOverScreen(final_score)
   if action in ("score_saved", "score_skipped"):
     final_score = 0 if payload is None else payload.get("score", 0)
-    return TelaGameOver(final_score)
+    return GameOverScreen(final_score)
   if action == "return_to_menu":
-    return TelaMenu()
+    return MenuScreen()
   if action == "show_scores":
-    return TelaPlacar()
+    return ScoreScreen()
 
   raise ValueError(f"Unknown transition action: {action}")
 
@@ -39,7 +39,7 @@ def main():
   clock = pygame.time.Clock()
   fps_limit = 60
 
-  current_screen = TelaMenu()
+  current_screen = MenuScreen()
 
   while True:
     screen_changed = False

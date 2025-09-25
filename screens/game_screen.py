@@ -9,7 +9,7 @@ from entities.explosion import Explosao
 from screens.pause_menu import MenuPause
 
 
-class TelaJogo:
+class GameScreen:
 
   def __init__(self):
     self.update_group = pygame.sprite.Group()

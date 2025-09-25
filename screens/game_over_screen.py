@@ -4,7 +4,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from services.score_manager import load_scores
 
 
-class TelaGameOver:
+class GameOverScreen:
 
   def __init__(self, final_score):
     self.final_score = final_score
@@ -41,11 +41,11 @@ class TelaGameOver:
     surface.blit(score_surface, score_rect)
 
     prompt_surface = self.hud_font.render("Press Enter or Spacebar to return", True, "darkgray")
-    prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH // 2, int(SCREEN_HEIGHT * 0.8)))
+    prompt_rect = prompt_surface.get_rect(center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT * 0.8)))
     surface.blit(prompt_surface, prompt_rect)
 
-    block_x = int(SCREEN_WIDTH * 0.75)
-    header = self.hud_font.render("TOP 3", True, "white")
+    block_x = (SCREEN_WIDTH * 0.8)
+    header = self.hud_font.render("TOP SCORES", True, "white")
     header_rect = header.get_rect(center=(block_x, SCREEN_HEIGHT // 3))
     surface.blit(header, header_rect)
 
