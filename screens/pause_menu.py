@@ -1,6 +1,6 @@
 import pygame
 
-from constants import LARGURA_TELA, ALTURA_TELA
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class MenuPause:
@@ -34,15 +34,14 @@ class MenuPause:
 
   def draw(self, surface):
     title_surface = self.title_font.render("Paused", True, "white")
-    title_rect = title_surface.get_rect(center=(LARGURA_TELA // 2, ALTURA_TELA // 3))
+    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
     surface.blit(title_surface, title_rect)
 
     spacing = 70
-    start_y = ALTURA_TELA // 2
+    start_y = SCREEN_HEIGHT // 2
 
     for index, option in enumerate(self.options):
       color = "white" if index == self.selected_index else "gray"
       option_surface = self.option_font.render(option, True, color)
-      option_rect = option_surface.get_rect(center=(LARGURA_TELA // 2, start_y + index * spacing))
+      option_rect = option_surface.get_rect(center=(SCREEN_WIDTH // 2, start_y + index * spacing))
       surface.blit(option_surface, option_rect)
-

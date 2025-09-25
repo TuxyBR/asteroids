@@ -1,11 +1,11 @@
 import pygame
-from .formaCirculo import FormaCirculo
-from constants import TAMANHO_JOGADOR, VELOCIDADE_PROJETIL, VELOCIDADE_GIRO, VELOCIDADE_JOGADOR
-from entidades.tiro import Tiro
+from .circle_shape import FormaCirculo
+from constants import PLAYER_RADIUS, PROJECTILE_SPEED, PLAYER_TURN_SPEED, PLAYER_SPEED
+from entities.shot import Tiro
 
 class Jogador(FormaCirculo):
   def __init__(self, x, y):
-    super().__init__(x, y, TAMANHO_JOGADOR)
+    super().__init__(x, y, PLAYER_RADIUS)
     self.rotation = 0
     self.shot_cooldown = 0
     self._paused = False
@@ -22,7 +22,7 @@ class Jogador(FormaCirculo):
     pygame.draw.polygon(screen, "white", self.triangle(), 2)
     
   def rotate(self, dt):
-    self.rotation += VELOCIDADE_GIRO * dt
+    self.rotation += PLAYER_TURN_SPEED * dt
     
   def update(self, dt):
     if self._paused:
@@ -48,11 +48,11 @@ class Jogador(FormaCirculo):
       
   def move(self, dt): #TODO: acceleration in movement
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
-    self.position += forward * VELOCIDADE_JOGADOR * dt
+    self.position += forward * PLAYER_SPEED * dt
     
   def shoot(self):
     shot = Tiro(self.position[0], self.position[1])
-    shot.velocidade = pygame.Vector2(0, 1).rotate(self.rotation) * VELOCIDADE_PROJETIL
+    shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PROJECTILE_SPEED
     self.shot_cooldown = 0.3
 
   def set_paused(self, paused: bool):

@@ -1,7 +1,7 @@
 import pygame
 import random
-from .formaCirculo import FormaCirculo
-from constants import MENOR_ASTEROID, MAIOR_ASTEROID
+from .circle_shape import FormaCirculo
+from constants import MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 
 class Asteroid(FormaCirculo):
   def __init__(self, x, y, radius):
@@ -43,10 +43,10 @@ class Asteroid(FormaCirculo):
     self.rotation += (self.rotation_speed * dt) % 360
   
   def split(self):
-    score = int(MAIOR_ASTEROID - self.radius + MENOR_ASTEROID)
+    score = int(MAX_ASTEROID_RADIUS - self.radius + MIN_ASTEROID_RADIUS)
     self.kill()
     angle = random.uniform(20, 50)
-    if self.radius > MENOR_ASTEROID*2:
+    if self.radius > MIN_ASTEROID_RADIUS * 2:
       asteroid_amount = random.randrange(2, 3)
       for _ in range(asteroid_amount):
         new_vector = self.velocity.rotate(angle)

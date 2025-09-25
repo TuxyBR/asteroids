@@ -1,12 +1,12 @@
 import pygame
 
-from constants import LARGURA_TELA, ALTURA_TELA
-from entidades.jogador import Jogador
-from entidades.asteroid import Asteroid
-from entidades.campoAsteroids import CampoAsteroids
-from entidades.tiro import Tiro
-from entidades.particulasExplosao import Explosao
-from telas.tela_menu_pause import MenuPause
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT
+from entities.player import Jogador
+from entities.asteroid import Asteroid
+from entities.asteroid_field import CampoAsteroids
+from entities.shot import Tiro
+from entities.explosion import Explosao
+from screens.pause_menu import MenuPause
 
 
 class TelaJogo:
@@ -23,7 +23,7 @@ class TelaJogo:
     Tiro.containers = (self.shot_group, self.update_group, self.draw_group)
     Explosao.containers = (self.update_group, self.draw_group)
 
-    self.player = Jogador(LARGURA_TELA / 2, ALTURA_TELA / 2)
+    self.player = Jogador(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     self.asteroid_field = CampoAsteroids()
 
     self.players = [self.player]
@@ -79,11 +79,11 @@ class TelaJogo:
 
     for asteroid in list(self.asteroid_group):
       for player in self.players:
-        if asteroid.colision(player):
+        if asteroid.collides_with(player):
           return ("game_over", {"score": self.score})
 
       for shot in list(self.shot_group):
-        if asteroid.colision(shot):
+        if asteroid.collides_with(shot):
           self.score += asteroid.split()
           self.explosions.append(Explosao(asteroid.position))
           shot.kill()
@@ -100,10 +100,10 @@ class TelaJogo:
 
     score_text = self.hud_font.render(f"Score: {self.score}", True, "gray")
     text_rect = score_text.get_rect()
-    surface.blit(score_text, (30, ALTURA_TELA - text_rect.height - 15))
+    surface.blit(score_text, (30, SCREEN_HEIGHT - text_rect.height - 15))
 
     if self.pause_menu is not None:
-      overlay = pygame.Surface((LARGURA_TELA, ALTURA_TELA), pygame.SRCALPHA)
+      overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
       overlay.fill((0, 0, 0, 180))
       surface.blit(overlay, (0, 0))
       self.pause_menu.draw(surface)

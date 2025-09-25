@@ -9,7 +9,7 @@ class FormaCirculo(pygame.sprite.Sprite):
             super().__init__()
 
         self.position = pygame.Vector2(x, y)
-        self.velocidade = pygame.Vector2(0, 0)
+        self.velocity = pygame.Vector2(0, 0)
         self.radius = radius
 
     def draw(self, screen):
@@ -20,5 +20,5 @@ class FormaCirculo(pygame.sprite.Sprite):
         # sub-classes must override
         pass
     
-    def colision(self, other):
-        return True if (self.position.distance_to(other.position) < (self.radius + other.radius)) else False
+    def collides_with(self, other):
+        return self.position.distance_to(other.position) < (self.radius + other.radius)
