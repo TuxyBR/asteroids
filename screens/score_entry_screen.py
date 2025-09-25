@@ -4,7 +4,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from services.score_manager import record_score
 
 
-class NewScoreScreen:
+class ScoreEntryScreen:
 
   def __init__(self, score):
     self.score = score

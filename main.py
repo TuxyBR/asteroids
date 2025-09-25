@@ -4,8 +4,8 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from screens.game_over_screen import GameOverScreen
 from screens.game_screen import GameScreen
 from screens.menu_screen import MenuScreen
-from screens.scoreboard_screen import ScoreScreen
-from screens.score_entry_screen import NewScoreScreen
+from screens.scoreboard_screen import ScoreboardScreen
+from screens.score_entry_screen import ScoreEntryScreen
 from services.score_manager import should_record
 
 
@@ -19,7 +19,7 @@ def switch_screen(transition):
   if action == "game_over":
     final_score = 0 if payload is None else payload.get("score", 0)
     if should_record(final_score):
-      return NewScoreScreen(final_score)
+      return ScoreEntryScreen(final_score)
     return GameOverScreen(final_score)
   if action in ("score_saved", "score_skipped"):
     final_score = 0 if payload is None else payload.get("score", 0)
@@ -27,7 +27,7 @@ def switch_screen(transition):
   if action == "return_to_menu":
     return MenuScreen()
   if action == "show_scores":
-    return ScoreScreen()
+    return ScoreboardScreen()
 
   raise ValueError(f"Unknown transition action: {action}")
 
