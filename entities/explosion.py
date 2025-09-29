@@ -1,13 +1,13 @@
 import pygame
 import random
 
-class Explosao(pygame.sprite.Sprite):
+class Explosion(pygame.sprite.Sprite):
   def __init__(self, pos):
     if hasattr(self, "containers"):
       super().__init__(self.containers)
     else:
       super().__init__()
-    self.particles = [ParticulaExplosao(pos) for _ in range(int(random.uniform(15,40)))]
+    self.particles = [ExplosionParticle(pos) for _ in range(int(random.uniform(15,40)))]
 
   def update(self, dt):
     for particle in self.particles:
@@ -22,7 +22,7 @@ class Explosao(pygame.sprite.Sprite):
     return len(self.particles) == 0
 
 
-class ParticulaExplosao:
+class ExplosionParticle:
   def __init__(self, pos):
     self.pos = pygame.Vector2(pos)
     self.velocity = pygame.Vector2(random.uniform(-1, 1), random.uniform(-1, 1)) * random.uniform(50, 150)

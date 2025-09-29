@@ -3,7 +3,7 @@ import pygame
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
-class MenuPause:
+class PauseMenu:
   def __init__(self):
     self.options = ["Continue", "Quit"]
     self.selected_index = 0

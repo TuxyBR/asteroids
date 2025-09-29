@@ -3,6 +3,7 @@ import pygame
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 from entities.asteroid import Asteroid
+from entities.collision_utils import polygon_collision_mtv
 
 
 class MenuScreen:
@@ -39,6 +40,7 @@ class MenuScreen:
 
   def update(self, dt):
     self.background_asteroids.update(dt)
+    self._resolve_background_collisions()
     self._wrap_background_asteroids()
     pygame.display.set_caption("Asteroids by TuxyBR")
     return None
@@ -80,13 +82,48 @@ class MenuScreen:
 
   def _wrap_background_asteroids(self):
     for asteroid in self.background_asteroids:
-      x, y = asteroid.position
-      if x < -MAX_ASTEROID_RADIUS:
-        asteroid.position.x = SCREEN_WIDTH + MAX_ASTEROID_RADIUS
-      elif x > SCREEN_WIDTH + MAX_ASTEROID_RADIUS:
-        asteroid.position.x = -MAX_ASTEROID_RADIUS
+      asteroid.wrap_position()
 
-      if y < -MAX_ASTEROID_RADIUS:
-        asteroid.position.y = SCREEN_HEIGHT + MAX_ASTEROID_RADIUS
-      elif y > SCREEN_HEIGHT + MAX_ASTEROID_RADIUS:
-        asteroid.position.y = -MAX_ASTEROID_RADIUS
+  def _resolve_background_collisions(self):
+    asteroids = list(self.background_asteroids)
+    total = len(asteroids)
+
+    for i in range(total):
+      asteroid_a = asteroids[i]
+      for j in range(i + 1, total):
+        asteroid_b = asteroids[j]
+
+        points_a = asteroid_a.get_polygon()
+        points_b = asteroid_b.get_polygon()
+        mtv = polygon_collision_mtv(points_a, points_b)
+
+        if mtv is None:
+          continue
+
+        normal, overlap = mtv
+        correction = normal * (overlap / 2)
+        asteroid_a.position -= correction
+        asteroid_b.position += correction
+
+        relative_velocity = asteroid_a.velocity - asteroid_b.velocity
+        toward_speed = relative_velocity.dot(normal)
+
+        if toward_speed <= 0:
+          if abs(toward_speed) < 1e-6:
+            impulse_strength = random.uniform(15, 30)
+            impulse = normal * impulse_strength
+            asteroid_a.velocity -= impulse
+            asteroid_b.velocity += impulse
+          continue
+
+        asteroid_a.velocity = asteroid_a.velocity.reflect(normal)
+        asteroid_b.velocity = asteroid_b.velocity.reflect(-normal)
+
+        min_normal_speed = 20
+        a_speed = asteroid_a.velocity.dot(-normal)
+        if a_speed < min_normal_speed:
+          asteroid_a.velocity += -normal * (min_normal_speed - a_speed)
+
+        b_speed = asteroid_b.velocity.dot(normal)
+        if b_speed < min_normal_speed:
+          asteroid_b.velocity += normal * (min_normal_speed - b_speed)
