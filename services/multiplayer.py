@@ -79,8 +79,10 @@ class MultiplayerHostSession:
             return
         join_topic = self.config.topic("join")
         input_topic = self.config.topic("inputs/#")
+        control_topic = self.config.topic("controls/#")
         client.subscribe(join_topic, qos=1)
         client.subscribe(input_topic, qos=0)
+        client.subscribe(control_topic, qos=1)
         print(f"[MultiplayerHostSession] Hosting session '{self.config.session_id}' on {self.config.broker}:{self.config.port}")
 
     def _on_disconnect(self, client, userdata, rc):
@@ -114,6 +116,12 @@ class MultiplayerHostSession:
                 self._pending_events.append(("input", player_id, payload))
             return
 
+        if head == "controls" and len(parts) == 2:
+            player_id = parts[1]
+            with self._event_lock:
+                self._pending_events.append(("control", player_id, payload))
+            return
+
     # Host loop ----------------------------------------------------------
     def process_pending(self):
         queue: Deque[tuple] = deque()
@@ -128,6 +136,8 @@ class MultiplayerHostSession:
                 self._handle_join(event[1])
             elif name == "input":
                 self._handle_input(event[1], event[2])
+            elif name == "control":
+                self._handle_control(event[1], event[2])
 
     def _handle_join(self, payload: dict):
         client_id = payload.get("client_id")
@@ -152,6 +162,26 @@ class MultiplayerHostSession:
     def _handle_input(self, player_id: str, payload: dict):
         input_state = PlayerInputState.from_dict(payload.get("state", payload))
         self.game_screen.set_player_input(player_id, input_state)
+
+    def _handle_control(self, player_id: str, payload: dict):
+        command_type = payload.get("type")
+        if command_type == "pause_state":
+            paused = bool(payload.get("paused", False))
+            self.game_screen.set_player_pause_flag(player_id, paused)
+            info = self.game_screen.pending_respawns.get(player_id)
+            if info is not None:
+                info["paused"] = paused
+            return
+        if command_type == "leave":
+            self._handle_leave(player_id)
+            return
+
+    def _handle_leave(self, player_id: str):
+        client_id = self._player_to_client.pop(player_id, None)
+        if client_id:
+            self._remote_clients.pop(client_id, None)
+        self.game_screen.remove_player(player_id)
+        print(f"[MultiplayerHostSession] Player {player_id} left the session.")
 
     def _send_join_ack(self, client_id: str, player_id: str):
         ack_topic = self.config.topic(f"clients/{client_id}")
@@ -192,6 +222,7 @@ class MultiplayerHostSession:
                 "velocity": _vec_to_list(player.velocity),
                 "rotation": player.rotation,
                 "input": player.input_state.to_dict(),
+                "paused": self.game_screen.player_pause_state.get(player.player_id, False),
             })
 
         asteroids = []
@@ -352,3 +383,22 @@ class MultiplayerClientSession:
         })
         topic = self.config.topic(f"inputs/{self.player_id}")
         self.client.publish(topic, payload, qos=0, retain=False)
+
+    def publish_pause_state(self, paused: bool):
+        if self.player_id is None or not self._running:
+            return
+        payload = json.dumps({
+            "type": "pause_state",
+            "paused": bool(paused),
+        })
+        topic = self.config.topic(f"controls/{self.player_id}")
+        self.client.publish(topic, payload, qos=1, retain=False)
+
+    def publish_leave(self):
+        if self.player_id is None or not self._running:
+            return
+        payload = json.dumps({
+            "type": "leave",
+        })
+        topic = self.config.topic(f"controls/{self.player_id}")
+        self.client.publish(topic, payload, qos=1, retain=False)

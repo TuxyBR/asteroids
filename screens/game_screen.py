@@ -28,10 +28,12 @@ class GameScreen:
     self.players = []
     self.player_registry = {}
     self.player_inputs = {}
+    self.player_pause_state = {}
     self.pending_respawns = {}
     self.allow_respawns = False
     self.respawn_delay = 3.0
     self._new_explosions = []
+    self._globally_paused = False
 
     self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     self._register_player(self.player)
@@ -47,6 +49,7 @@ class GameScreen:
 
     self.hud_font = pygame.font.SysFont("monospace", 36, bold=True)
     self.pause_menu = None
+    self.local_pause_menu = None
     self.uses_local_keyboard = True
 
   def _set_all_players_paused(self, paused):
@@ -56,10 +59,34 @@ class GameScreen:
   def _all_players_paused(self):
     return all(player.is_paused() for player in self.players)
 
+  def _set_player_pause_state(self, player_id, paused):
+    self.player_pause_state[player_id] = bool(paused)
+    self._update_global_pause()
+
+  def set_player_pause_flag(self, player_id, paused):
+    self._set_player_pause_state(player_id, paused)
+
+  def _update_global_pause(self):
+    active_ids = [player.player_id for player in self.players]
+    all_paused = bool(active_ids) and all(self.player_pause_state.get(pid, False) for pid in active_ids)
+
+    if all_paused and not self._globally_paused:
+      self._globally_paused = True
+      self._set_all_players_paused(True)
+      if self.pause_menu is None:
+        self.pause_menu = PauseMenu()
+      self.local_pause_menu = None
+    elif not all_paused and self._globally_paused:
+      self._globally_paused = False
+      self._set_all_players_paused(False)
+      self.pause_menu = None
+
   def _register_player(self, player: Player):
     self.players.append(player)
     self.player_registry[player.player_id] = player
     self.player_inputs.setdefault(player.player_id, player.input_state)
+    self.player_pause_state.setdefault(player.player_id, False)
+    self._update_global_pause()
     return player
 
   def spawn_player(self, x=None, y=None, player_id=None):
@@ -88,11 +115,15 @@ class GameScreen:
 
   def remove_player(self, player_id):
     player = self.player_registry.pop(player_id, None)
-    if player is None:
-      return
-    if player in self.players:
-      self.players.remove(player)
-    player.kill()
+    if player is not None:
+      if player in self.players:
+        self.players.remove(player)
+      player.kill()
+
+    self.player_inputs.pop(player_id, None)
+    self.pending_respawns.pop(player_id, None)
+    self.player_pause_state.pop(player_id, None)
+    self._update_global_pause()
 
   def handle_event(self, event):
     if self.pause_menu is not None:
@@ -102,35 +133,85 @@ class GameScreen:
 
       action, payload = transition
       if action == "resume":
+        for player in self.players:
+          self.player_pause_state[player.player_id] = False
+        self._globally_paused = False
         self._set_all_players_paused(False)
         self.pause_menu = None
+        self._update_global_pause()
         return None
 
       if action == "return_to_menu":
+        for player in self.players:
+          self.player_pause_state[player.player_id] = False
+        self._globally_paused = False
         self._set_all_players_paused(False)
         self.pause_menu = None
+        self._update_global_pause()
+        return ("return_to_menu", payload)
+
+      return None
+
+    if self.local_pause_menu is not None:
+      transition = self.local_pause_menu.handle_event(event)
+      if transition is None:
+        return None
+
+      action, payload = transition
+      if action == "resume":
+        if self.players:
+          player_id = self.players[0].player_id
+          self._set_player_pause_state(player_id, False)
+        self.local_pause_menu = None
+        return None
+
+      if action == "return_to_menu":
+        if self.players:
+          player_id = self.players[0].player_id
+          self._set_player_pause_state(player_id, False)
+        self.local_pause_menu = None
         return ("return_to_menu", payload)
 
       return None
 
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
       if self.players:
-        self._set_all_players_paused(True)
-      if self._all_players_paused() and self.pause_menu is None:
-        self.pause_menu = PauseMenu()
+        player_id = self.players[0].player_id
+        self._set_player_pause_state(player_id, True)
+        if not self._globally_paused and self.local_pause_menu is None:
+          self.local_pause_menu = PauseMenu()
 
     return None
 
   def update(self, dt):
-    if self.pause_menu is not None:
-      self.pause_menu.update(dt)
+    self._update_global_pause()
+
+    if self._globally_paused:
+      if self.pause_menu is not None:
+        self.pause_menu.update(dt)
       return None
+
+    if self.pause_menu is not None:
+      self.pause_menu = None
+
+    if self.players:
+      primary_player = self.players[0]
+      if not self.player_pause_state.get(primary_player.player_id, False) and self.local_pause_menu is not None:
+        self.local_pause_menu = None
+    else:
+      self.local_pause_menu = None
+
+    if self.local_pause_menu is not None:
+      self.local_pause_menu.update(dt)
 
     pygame.display.set_caption(f"Asteroids by TuxyBR - Score: {self.score}")
 
     if self.uses_local_keyboard and self.players:
       primary_player = self.players[0]
-      primary_state = PlayerInputState.from_keyboard()
+      if self.player_pause_state.get(primary_player.player_id, False) and not self._globally_paused:
+        primary_state = PlayerInputState()
+      else:
+        primary_state = PlayerInputState.from_keyboard()
       self.set_player_input(primary_player.player_id, primary_state)
 
     self._update_respawns(dt)
@@ -171,6 +252,11 @@ class GameScreen:
       overlay.fill((0, 0, 0, 180))
       surface.blit(overlay, (0, 0))
       self.pause_menu.draw(surface)
+    elif self.local_pause_menu is not None:
+      overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+      overlay.fill((0, 0, 0, 180))
+      surface.blit(overlay, (0, 0))
+      self.local_pause_menu.draw(surface)
 
   def _handle_player_death(self, player: Player):
     player_id = player.player_id
@@ -178,7 +264,10 @@ class GameScreen:
     self.pending_respawns[player_id] = {
       "time_left": self.respawn_delay,
       "awaiting_input": False,
+      "paused": self.player_pause_state.get(player_id, False),
     }
+    self.player_pause_state[player_id] = False
+    self._update_global_pause()
 
   def _update_respawns(self, dt):
     to_respawn = []
@@ -196,13 +285,25 @@ class GameScreen:
 
     for player_id in to_respawn:
       self._respawn_player(player_id)
+    if to_respawn:
+      self._update_global_pause()
 
   def _respawn_player(self, player_id):
     input_state = self.player_inputs.get(player_id, PlayerInputState())
+    pending_info = self.pending_respawns.pop(player_id, {})
     player = self.spawn_player(player_id=player_id)
     player.set_input_state(input_state)
+    paused_flag = pending_info.get("paused", False)
+    self.player_pause_state[player_id] = paused_flag
+    if self._globally_paused:
+      player.set_paused(True)
+    else:
+      player.set_paused(False)
+    if paused_flag and not self._globally_paused and player_id == self.player.player_id:
+      if self.local_pause_menu is None:
+        self.local_pause_menu = PauseMenu()
+    self._update_global_pause()
     self.player_inputs[player_id] = input_state
-    self.pending_respawns.pop(player_id, None)
 
   def _input_requests_respawn(self, input_state: PlayerInputState) -> bool:
     return bool(

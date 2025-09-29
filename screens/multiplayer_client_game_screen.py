@@ -13,6 +13,7 @@ from constants import (
 from entities.player_input import PlayerInputState
 from entities.thrust_particle import ThrustParticle
 from entities.explosion import Explosion
+from screens.pause_menu import PauseMenu
 from services.multiplayer import MultiplayerClientSession
 
 
@@ -89,6 +90,12 @@ class MultiplayerClientGameScreen:
     self.score = 0
     self.thrust_emitters = {}
     self.remote_explosions = {}
+    self.local_pause_menu = None
+    self.global_pause_menu = None
+    self.local_paused = False
+    self._desired_pause = False
+    self._leave_sent = False
+    self._host_all_paused = False
 
     self.hud_font = pygame.font.SysFont("monospace", 32, bold=True)
     self.info_font = pygame.font.SysFont("monospace", 24, bold=True)
@@ -98,18 +105,78 @@ class MultiplayerClientGameScreen:
   def _ensure_session_stopped(self):
     if self._session_closed or self.session is None:
       return
+    self._send_leave()
     self.session.stop()
     self._session_closed = True
 
+  def _send_leave(self):
+    if self._leave_sent or self.session is None:
+      return
+    self.session.publish_leave()
+    self._leave_sent = True
+
+  def _set_local_pause(self, paused: bool, force: bool = False):
+    paused = bool(paused)
+    if not force and self._desired_pause == paused:
+      return
+    self._desired_pause = paused
+    if paused and self.local_pause_menu is None:
+      self.local_pause_menu = PauseMenu()
+    if not paused and self.local_pause_menu is not None:
+      self.local_pause_menu = None
+    if not self._session_closed:
+      self.session.publish_pause_state(paused)
+    self.local_paused = paused
+
   def handle_event(self, event):
+    if self.local_pause_menu is not None:
+      transition = self.local_pause_menu.handle_event(event)
+      if transition is None:
+        return None
+
+      action, payload = transition
+      if action == "resume":
+        self._set_local_pause(False, force=True)
+        return None
+
+      if action == "return_to_menu":
+        self._set_local_pause(False, force=True)
+        self._send_leave()
+        self._ensure_session_stopped()
+        return ("return_to_menu", None)
+
+      return None
+
+    if self.global_pause_menu is not None:
+      transition = self.global_pause_menu.handle_event(event)
+      if transition is None:
+        return None
+
+      action, payload = transition
+      if action == "resume":
+        self._set_local_pause(False, force=True)
+        self.global_pause_menu = None
+        return None
+
+      if action == "return_to_menu":
+        self._set_local_pause(False, force=True)
+        self._send_leave()
+        self._ensure_session_stopped()
+        self.global_pause_menu = None
+        return ("return_to_menu", None)
+
+      return None
+
     if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-      self._ensure_session_stopped()
-      return ("return_to_menu", None)
+      self._set_local_pause(True)
+      return None
     return None
 
   def update(self, dt):
     if self.player_id is None and self.session.player_id is not None:
       self.player_id = self.session.player_id
+      if self._desired_pause and not self._session_closed:
+        self.session.publish_pause_state(True)
 
     state = self.session.consume_state()
     if state is not None:
@@ -121,7 +188,11 @@ class MultiplayerClientGameScreen:
       payload = {"score": event.get("score", 0)}
       return ("game_over", payload)
 
-    current_input = PlayerInputState.from_keyboard()
+    raw_input = PlayerInputState.from_keyboard()
+    if self.local_pause_menu is None and self.global_pause_menu is None:
+      current_input = raw_input
+    else:
+      current_input = PlayerInputState()
     if current_input != self._last_input_state:
       self.session.publish_input(current_input)
       self._last_input_state = current_input
@@ -131,19 +202,23 @@ class MultiplayerClientGameScreen:
       caption += f" - Player {self.player_id}"
     pygame.display.set_caption(caption)
 
+    if self.local_pause_menu is not None:
+      self.local_pause_menu.update(dt)
+    if self.global_pause_menu is not None:
+      self.global_pause_menu.update(dt)
+
     for player_id in list(self.thrust_emitters.keys()):
       if player_id not in self.players:
         del self.thrust_emitters[player_id]
 
     for player_id, player_state in self.players.items():
       emitter = self.thrust_emitters.setdefault(player_id, _RemoteThrustEmitter())
-      emitter.update(
-        dt,
-        player_state["position"],
-        player_state["rotation"],
-        player_state["velocity"],
-        player_state["input"],
-      )
+      velocity = player_state["velocity"]
+      input_state = player_state["input"]
+      if player_state.get("paused"):
+        emitter.update(dt, player_state["position"], player_state["rotation"], pygame.Vector2(), PlayerInputState())
+      else:
+        emitter.update(dt, player_state["position"], player_state["rotation"], velocity, input_state)
 
     for explosion_id, explosion in list(self.remote_explosions.items()):
       explosion.update(dt)
@@ -191,14 +266,28 @@ class MultiplayerClientGameScreen:
     ]
     if self.player_id:
       info_lines.append(f"You are player {self.player_id}")
-    info_lines.append("Press ESC to leave the session")
+    info_lines.append("Press ESC to open the pause menu")
 
     if self.player_id and self.player_id not in self.players:
       info_lines.append("Waiting for respawn... press any control once ready")
 
+    if self.global_pause_menu is not None:
+      info_lines.append("Game paused - waiting for all players")
+
     for index, line in enumerate(info_lines):
       label = self.info_font.render(line, True, "gray")
       surface.blit(label, (20, 20 + index * 24))
+
+    if self.local_pause_menu is not None:
+      overlay = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
+      overlay.fill((0, 0, 0, 180))
+      surface.blit(overlay, (0, 0))
+      self.local_pause_menu.draw(surface)
+    elif self.global_pause_menu is not None:
+      overlay = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
+      overlay.fill((0, 0, 0, 180))
+      surface.blit(overlay, (0, 0))
+      self.global_pause_menu.draw(surface)
 
   def _apply_state(self, state):
     self.score = state.get("score", 0)
@@ -216,8 +305,28 @@ class MultiplayerClientGameScreen:
         "rotation": player.get("rotation", 0.0),
         "velocity": velocity,
         "input": input_state,
+        "paused": bool(player.get("paused", False)),
       }
+
     self.players = new_players
+
+    if self.player_id and self.player_id in new_players:
+      self.local_paused = bool(new_players[self.player_id]["paused"])
+    else:
+      self.local_paused = False
+
+    host_all_paused = bool(new_players) and all(player.get("paused") for player in new_players.values())
+    self._host_all_paused = host_all_paused
+    if host_all_paused:
+      if self.global_pause_menu is None:
+        self.global_pause_menu = PauseMenu()
+    else:
+      self.global_pause_menu = None
+
+    if self._desired_pause and self.local_pause_menu is None and not host_all_paused:
+      self.local_pause_menu = PauseMenu()
+    if not self._desired_pause and self.local_pause_menu is not None and not host_all_paused:
+      self.local_pause_menu = None
 
     new_asteroids = {}
     for asteroid in state.get("asteroids", []):
