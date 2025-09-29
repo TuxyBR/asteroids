@@ -1,4 +1,5 @@
 import random
+import uuid
 
 import pygame
 from .circle_shape import CircleShape
@@ -16,16 +17,19 @@ from constants import (
 )
 from entities.shot import Shot
 from entities.thrust_particle import ThrustParticle
+from entities.player_input import PlayerInputState
 
 class Player(CircleShape):
-  def __init__(self, x, y):
+  def __init__(self, x, y, player_id=None):
     super().__init__(x, y, PLAYER_RADIUS)
+    self.player_id = player_id or uuid.uuid4().hex
     self.rotation = 0
     self.shot_cooldown = 0
     self._paused = False
     self.velocity = pygame.Vector2()
     self.thrust_particles = []
     self._thrust_emit_residual = 0.0
+    self.input_state = PlayerInputState()
 
   def triangle(self):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -50,25 +54,21 @@ class Player(CircleShape):
     if self._paused:
       return
 
-    keys = pygame.key.get_pressed()
-
     if self.shot_cooldown > 0:
       self.shot_cooldown -= dt
-    else:
-      if keys[pygame.K_SPACE]:
-        self.shoot()
 
-    forward_pressed = keys[pygame.K_w] or keys[pygame.K_UP]
-    backward_pressed = keys[pygame.K_s] or keys[pygame.K_DOWN]
-    move_direction = int(forward_pressed) - int(backward_pressed)
+    if self.input_state.shoot and self.shot_cooldown <= 0:
+      self.shoot()
+
+    move_direction = int(self.input_state.thrust) - int(self.input_state.reverse)
 
     self.move(dt, move_direction)
     self._emit_thrust(dt, move_direction)
     self._update_thrust_particles(dt)
 
-    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+    if self.input_state.rotate_left:
       self.rotate(-dt)
-    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+    if self.input_state.rotate_right:
       self.rotate(dt)
       
   def move(self, dt, direction):
@@ -152,4 +152,7 @@ class Player(CircleShape):
 
   def is_paused(self):
     return self._paused
+
+  def set_input_state(self, input_state: PlayerInputState):
+    self.input_state = input_state
     
