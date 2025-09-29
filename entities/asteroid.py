@@ -1,18 +1,25 @@
 import pygame
 import random
+import uuid
 from .circle_shape import CircleShape
 from constants import MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 
 class Asteroid(CircleShape):
-  def __init__(self, x, y, radius):
+  def __init__(self, x, y, radius, entity_id=None, points=None, rotation_speed=None):
     super().__init__(x, y, radius)
     
+    self.entity_id = entity_id or uuid.uuid4().hex
     self.rotation = 0
-    self.rotation_speed = random.randrange(-15, 15)
+    self.rotation_speed = random.randrange(-15, 15) if rotation_speed is None else rotation_speed
     
-    self.sides = random.randrange(8, 20)
-    self.jaggedness = random.uniform(0.2, 0.4)
-    self.points = self.rng_polygon()
+    if points is None:
+      self.sides = random.randrange(8, 20)
+      self.jaggedness = random.uniform(0.2, 0.4)
+      self.points = self.rng_polygon()
+    else:
+      self.points = [pygame.Vector2(point) for point in points]
+      self.sides = len(self.points)
+      self.jaggedness = 0.0
   
   def rng_polygon(self):
     points = []
@@ -33,6 +40,9 @@ class Asteroid(CircleShape):
 
   def get_polygon(self):
     return [self.position + point.rotate(self.rotation) for point in self.points]
+
+  def get_local_points(self):
+    return [[point.x, point.y] for point in self.points]
 
     
   def update(self, dt):
