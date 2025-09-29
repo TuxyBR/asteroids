@@ -31,6 +31,7 @@ class GameScreen:
     self.pending_respawns = {}
     self.allow_respawns = False
     self.respawn_delay = 3.0
+    self._new_explosions = []
 
     self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     self._register_player(self.player)
@@ -146,7 +147,9 @@ class GameScreen:
       for shot in list(self.shot_group):
         if asteroid.collides_with(shot):
           self.score += asteroid.split()
-          self.explosions.append(Explosion(asteroid.position))
+          explosion = Explosion(asteroid.position)
+          self.explosions.append(explosion)
+          self._new_explosions.append(explosion)
           shot.kill()
 
     self.explosions = [explosion for explosion in self.explosions if not explosion.is_dead()]
@@ -219,3 +222,8 @@ class GameScreen:
         message = f"Respawn in {info['time_left']:.1f}s"
       status.append((player_id, message))
     return status
+
+  def consume_new_explosions(self):
+    pending = self._new_explosions
+    self._new_explosions = []
+    return pending

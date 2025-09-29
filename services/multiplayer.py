@@ -55,6 +55,7 @@ class MultiplayerHostSession:
         self._state_interval = 1.0 / max(1, MULTIPLAYER_STATE_SEND_HZ)
 
         self._running = False
+        self._known_explosions: set[str] = set()
 
     # MQTT lifecycle -----------------------------------------------------
     def start(self):
@@ -190,6 +191,7 @@ class MultiplayerHostSession:
                 "position": _vec_to_list(player.position),
                 "velocity": _vec_to_list(player.velocity),
                 "rotation": player.rotation,
+                "input": player.input_state.to_dict(),
             })
 
         asteroids = []
@@ -212,6 +214,19 @@ class MultiplayerHostSession:
                 "velocity": _vec_to_list(shot.velocity),
             })
 
+        new_explosions = []
+        for explosion in self.game_screen.consume_new_explosions():
+            if explosion.entity_id in self._known_explosions:
+                continue
+            self._known_explosions.add(explosion.entity_id)
+            new_explosions.append({
+                "id": explosion.entity_id,
+                "position": _vec_to_list(explosion.origin),
+            })
+
+        active_ids = {explosion.entity_id for explosion in self.game_screen.explosions}
+        self._known_explosions.intersection_update(active_ids)
+
         return {
             "type": "state",
             "timestamp": time.time(),
@@ -219,6 +234,9 @@ class MultiplayerHostSession:
             "players": players,
             "asteroids": asteroids,
             "shots": shots,
+            "effects": {
+                "new_explosions": new_explosions,
+            },
         }
 
 

@@ -1,12 +1,15 @@
 import pygame
 import random
+import uuid
 
 class Explosion(pygame.sprite.Sprite):
-  def __init__(self, pos):
+  def __init__(self, pos, entity_id=None):
     if hasattr(self, "containers"):
       super().__init__(self.containers)
     else:
       super().__init__()
+    self.entity_id = entity_id or uuid.uuid4().hex
+    self.origin = pygame.Vector2(pos)
     self.particles = [ExplosionParticle(pos) for _ in range(int(random.uniform(15,40)))]
 
   def update(self, dt):

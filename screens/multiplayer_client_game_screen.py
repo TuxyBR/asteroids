@@ -1,8 +1,75 @@
+import random
+
 import pygame
 
-from constants import PLAYER_RADIUS, SHOT_RADIUS
+from constants import (
+  PLAYER_BACKWARD_ACCELERATION,
+  PLAYER_RADIUS,
+  PLAYER_THRUST_IDLE_PARTICLE_RATE,
+  PLAYER_THRUST_PARTICLE_BASE_OFFSET,
+  PLAYER_THRUST_PARTICLE_RATE,
+  SHOT_RADIUS,
+)
 from entities.player_input import PlayerInputState
+from entities.thrust_particle import ThrustParticle
+from entities.explosion import Explosion
 from services.multiplayer import MultiplayerClientSession
+
+
+class _RemoteThrustEmitter:
+
+  def __init__(self):
+    self.particles = []
+    self._residual = 0.0
+
+  def update(self, dt, position, rotation, velocity, input_state: PlayerInputState):
+    forward = pygame.Vector2(0, 1).rotate(rotation)
+    backward_direction = -forward
+
+    speed = velocity.length()
+
+    thrusting = input_state.thrust
+    reversing = input_state.reverse
+
+    emission_strength = 0.0
+    emission_rate = 0.0
+
+    if thrusting:
+      emission_strength = 1.0
+      emission_rate = PLAYER_THRUST_PARTICLE_RATE
+    elif reversing:
+      emission_strength = max(0.2, PLAYER_BACKWARD_ACCELERATION)
+      emission_rate = PLAYER_THRUST_PARTICLE_RATE * 0.7
+    elif speed > 20:
+      emission_strength = 0.35
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE
+    elif speed > 5:
+      emission_strength = 0.2
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE * 0.5
+    else:
+      emission_strength = 0.1
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE * 0.25
+
+    if emission_rate > 0:
+      emit_offset = PLAYER_RADIUS + PLAYER_THRUST_PARTICLE_BASE_OFFSET * (0.25 + 0.75 * emission_strength)
+      emit_pos_base = position - forward * emit_offset
+      lateral_offset = forward.rotate(90)
+
+      self._residual += emission_rate * dt
+      while self._residual >= 1.0:
+        self._residual -= 1.0
+        jitter = lateral_offset * random.uniform(-PLAYER_RADIUS * 0.4, PLAYER_RADIUS * 0.4)
+        emit_pos = emit_pos_base + jitter
+        particle = ThrustParticle(emit_pos, backward_direction, emission_strength, velocity)
+        self.particles.append(particle)
+
+    for particle in self.particles:
+      particle.update(dt)
+    self.particles = [particle for particle in self.particles if not particle.is_dead()]
+
+  def draw(self, surface):
+    for particle in self.particles:
+      particle.draw(surface)
 
 
 class MultiplayerClientGameScreen:
@@ -20,6 +87,8 @@ class MultiplayerClientGameScreen:
     self.asteroids = {}
     self.shots = {}
     self.score = 0
+    self.thrust_emitters = {}
+    self.remote_explosions = {}
 
     self.hud_font = pygame.font.SysFont("monospace", 32, bold=True)
     self.info_font = pygame.font.SysFont("monospace", 24, bold=True)
@@ -61,6 +130,26 @@ class MultiplayerClientGameScreen:
     if self.player_id:
       caption += f" - Player {self.player_id}"
     pygame.display.set_caption(caption)
+
+    for player_id in list(self.thrust_emitters.keys()):
+      if player_id not in self.players:
+        del self.thrust_emitters[player_id]
+
+    for player_id, player_state in self.players.items():
+      emitter = self.thrust_emitters.setdefault(player_id, _RemoteThrustEmitter())
+      emitter.update(
+        dt,
+        player_state["position"],
+        player_state["rotation"],
+        player_state["velocity"],
+        player_state["input"],
+      )
+
+    for explosion_id, explosion in list(self.remote_explosions.items()):
+      explosion.update(dt)
+      if explosion.is_dead():
+        del self.remote_explosions[explosion_id]
+
     return None
 
   def draw(self, surface):
@@ -78,6 +167,12 @@ class MultiplayerClientGameScreen:
     for shot in self.shots.values():
       position = shot["position"]
       pygame.draw.circle(surface, "white", (int(position.x), int(position.y)), SHOT_RADIUS, 2)
+
+    for explosion in self.remote_explosions.values():
+      explosion.draw(surface)
+
+    for emitter in self.thrust_emitters.values():
+      emitter.draw(surface)
 
     for player in self.players.values():
       forward = pygame.Vector2(0, 1).rotate(player["rotation"])
@@ -114,9 +209,13 @@ class MultiplayerClientGameScreen:
       if not player_id:
         continue
       position = pygame.Vector2(*player.get("position", (0.0, 0.0)))
+      velocity = pygame.Vector2(*player.get("velocity", (0.0, 0.0)))
+      input_state = PlayerInputState.from_dict(player.get("input", {}))
       new_players[player_id] = {
         "position": position,
         "rotation": player.get("rotation", 0.0),
+        "velocity": velocity,
+        "input": input_state,
       }
     self.players = new_players
 
@@ -142,6 +241,14 @@ class MultiplayerClientGameScreen:
       position = pygame.Vector2(*shot.get("position", (0.0, 0.0)))
       new_shots[shot_id] = {"position": position}
     self.shots = new_shots
+
+    effects = state.get("effects", {})
+    for explosion in effects.get("new_explosions", []):
+      explosion_id = explosion.get("id")
+      if not explosion_id or explosion_id in self.remote_explosions:
+        continue
+      position = pygame.Vector2(*explosion.get("position", (0.0, 0.0)))
+      self.remote_explosions[explosion_id] = Explosion(position, entity_id=explosion_id)
 
   def __del__(self):
     if hasattr(self, "session"):
