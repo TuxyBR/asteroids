@@ -45,15 +45,31 @@ class Asteroid(CircleShape):
   
   def split(self):
     score = int(MAX_ASTEROID_RADIUS - self.radius + MIN_ASTEROID_RADIUS)
+    current_position = pygame.Vector2(self.position)
+    current_velocity = pygame.Vector2(self.velocity)
     self.kill()
-    angle = random.uniform(20, 50)
+
     if self.radius > MIN_ASTEROID_RADIUS * 2:
       asteroid_amount = random.randrange(2, 3)
-      for _ in range(asteroid_amount):
-        new_vector = self.velocity.rotate(angle)
-        angle *= random.uniform(1, 2)
-        new_radius = (self.radius / asteroid_amount) + (random.uniform(-5, 5))
-        new_asteroid = Asteroid(self.position.x, self.position.y, new_radius)
-        new_asteroid.velocity = new_vector * random.uniform(1, 1.6)
-    return(score)
+      base_direction = current_velocity.normalize() if current_velocity.length_squared() > 0 else pygame.Vector2(0, -1).rotate(random.uniform(0, 360))
+      base_angle = random.uniform(20, 50)
+      base_speed = max(current_velocity.length(), 60)
+
+      for index in range(asteroid_amount):
+        direction = base_direction.rotate(base_angle * (-1 if index % 2 else 1) * random.uniform(0.8, 1.4))
+        if direction.length_squared() == 0:
+          direction = pygame.Vector2(0, -1)
+        direction = direction.normalize()
+
+        new_radius = max(MIN_ASTEROID_RADIUS, (self.radius / asteroid_amount) + random.uniform(-5, 5))
+        offset_distance = (self.radius + new_radius) * 0.6
+        spawn_position = current_position + direction * offset_distance
+
+        new_speed = base_speed * random.uniform(0.7, 1.3)
+        new_velocity = direction * new_speed
+
+        new_asteroid = Asteroid(spawn_position.x, spawn_position.y, new_radius)
+        new_asteroid.velocity = new_velocity
+
+    return score
         
