@@ -1,3 +1,5 @@
+import random
+
 import pygame
 from .circle_shape import FormaCirculo
 from constants import (
@@ -7,9 +9,13 @@ from constants import (
   PLAYER_RADIUS,
   PLAYER_SPEED,
   PLAYER_TURN_SPEED,
+  PLAYER_THRUST_IDLE_PARTICLE_RATE,
+  PLAYER_THRUST_PARTICLE_BASE_OFFSET,
+  PLAYER_THRUST_PARTICLE_RATE,
   PROJECTILE_SPEED,
 )
 from entities.shot import Tiro
+from entities.thrust_particle import ThrustParticle
 
 class Jogador(FormaCirculo):
   def __init__(self, x, y):
@@ -18,6 +24,8 @@ class Jogador(FormaCirculo):
     self.shot_cooldown = 0
     self._paused = False
     self.velocity = pygame.Vector2()
+    self.thrust_particles = []
+    self._thrust_emit_residual = 0.0
 
   def triangle(self):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -28,6 +36,8 @@ class Jogador(FormaCirculo):
     return [a, b, c]
   
   def draw(self, screen):
+    for particle in self.thrust_particles:
+      particle.draw(screen)
     pygame.draw.polygon(screen, "white", self.triangle(), 2)
     
   def rotate(self, dt):
@@ -50,6 +60,8 @@ class Jogador(FormaCirculo):
     move_direction = int(forward_pressed) - int(backward_pressed)
 
     self.move(dt, move_direction)
+    self._emit_thrust(dt, move_direction)
+    self._update_thrust_particles(dt)
 
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
       self.rotate(-dt)
@@ -81,6 +93,50 @@ class Jogador(FormaCirculo):
           self.velocity.update(0, 0)
 
     self.position += self.velocity * dt
+
+  def _emit_thrust(self, dt, direction):
+    forward = pygame.Vector2(0, 1).rotate(self.rotation)
+    backward_direction = -forward
+
+    speed = self.velocity.length()
+    emission_strength = 0.0
+    emission_rate = 0.0
+
+    if direction > 0:
+      emission_strength = 1.0
+      emission_rate = PLAYER_THRUST_PARTICLE_RATE
+    elif direction < 0:
+      emission_strength = max(0.2, PLAYER_BACKWARD_ACCELERATION)
+      emission_rate = PLAYER_THRUST_PARTICLE_RATE * 0.7
+    elif speed > 20:
+      emission_strength = 0.35
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE
+    elif speed > 5:
+      emission_strength = 0.2
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE * 0.5
+    else:
+      emission_strength = 0.1
+      emission_rate = PLAYER_THRUST_IDLE_PARTICLE_RATE * 0.25
+
+    if emission_rate <= 0:
+      return
+
+    emit_offset = self.radius + PLAYER_THRUST_PARTICLE_BASE_OFFSET * (0.25 + 0.75 * emission_strength)
+    emit_pos_base = self.position - forward * emit_offset
+    lateral_offset = forward.rotate(90)
+
+    self._thrust_emit_residual += emission_rate * dt
+    while self._thrust_emit_residual >= 1.0:
+      self._thrust_emit_residual -= 1.0
+      jitter = lateral_offset * random.uniform(-self.radius * 0.4, self.radius * 0.4)
+      emit_pos = emit_pos_base + jitter
+      particle = ThrustParticle(emit_pos, backward_direction, emission_strength, self.velocity)
+      self.thrust_particles.append(particle)
+
+  def _update_thrust_particles(self, dt):
+    for particle in self.thrust_particles:
+      particle.update(dt)
+    self.thrust_particles = [particle for particle in self.thrust_particles if not particle.is_dead()]
     
   def shoot(self):
     shot = Tiro(self.position[0], self.position[1])
