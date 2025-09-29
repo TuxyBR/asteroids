@@ -1,9 +1,9 @@
 import pygame
 import random
-from .circle_shape import FormaCirculo
+from .circle_shape import CircleShape
 from constants import MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 
-class Asteroid(FormaCirculo):
+class Asteroid(CircleShape):
   def __init__(self, x, y, radius):
     super().__init__(x, y, radius)
     

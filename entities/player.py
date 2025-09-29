@@ -1,7 +1,7 @@
 import random
 
 import pygame
-from .circle_shape import FormaCirculo
+from .circle_shape import CircleShape
 from constants import (
   PLAYER_ACCELERATION,
   PLAYER_BACKWARD_ACCELERATION,
@@ -14,10 +14,10 @@ from constants import (
   PLAYER_THRUST_PARTICLE_RATE,
   PROJECTILE_SPEED,
 )
-from entities.shot import Tiro
+from entities.shot import Shot
 from entities.thrust_particle import ThrustParticle
 
-class Jogador(FormaCirculo):
+class Player(CircleShape):
   def __init__(self, x, y):
     super().__init__(x, y, PLAYER_RADIUS)
     self.rotation = 0
@@ -140,7 +140,7 @@ class Jogador(FormaCirculo):
     self.thrust_particles = [particle for particle in self.thrust_particles if not particle.is_dead()]
     
   def shoot(self):
-    shot = Tiro(self.position[0], self.position[1])
+    shot = Shot(self.position[0], self.position[1])
     shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PROJECTILE_SPEED
     self.shot_cooldown = 0.3
 

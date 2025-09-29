@@ -1,12 +1,12 @@
 import pygame
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from entities.player import Jogador
+from entities.player import Player
 from entities.asteroid import Asteroid
 from entities.asteroid_field import AsteroidField
-from entities.shot import Tiro
-from entities.explosion import Explosao
-from screens.pause_menu import MenuPause
+from entities.shot import Shot
+from entities.explosion import Explosion
+from screens.pause_menu import PauseMenu
 
 
 class GameScreen:
@@ -17,12 +17,12 @@ class GameScreen:
     self.asteroid_group = pygame.sprite.Group()
     self.shot_group = pygame.sprite.Group()
 
-    Jogador.containers = (self.update_group, self.draw_group)
+    Player.containers = (self.update_group, self.draw_group)
     Asteroid.containers = (self.asteroid_group, self.update_group, self.draw_group)
-    Tiro.containers = (self.shot_group, self.update_group, self.draw_group)
-    Explosao.containers = (self.update_group, self.draw_group)
+    Shot.containers = (self.shot_group, self.update_group, self.draw_group)
+    Explosion.containers = (self.update_group, self.draw_group)
 
-    self.player = Jogador(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     self.asteroid_field = asteroid_field
     if self.asteroid_field is None:
       self.asteroid_field = AsteroidField(self.asteroid_group, self.update_group)
@@ -68,7 +68,7 @@ class GameScreen:
       if self.players:
         self.players[0].set_paused(True)
       if self._all_players_paused() and self.pause_menu is None:
-        self.pause_menu = MenuPause()
+        self.pause_menu = PauseMenu()
 
     return None
 
@@ -89,7 +89,7 @@ class GameScreen:
       for shot in list(self.shot_group):
         if asteroid.collides_with(shot):
           self.score += asteroid.split()
-          self.explosions.append(Explosao(asteroid.position))
+          self.explosions.append(Explosion(asteroid.position))
           shot.kill()
 
     self.explosions = [explosion for explosion in self.explosions if not explosion.is_dead()]
