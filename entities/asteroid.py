@@ -31,6 +31,9 @@ class Asteroid(CircleShape):
       points.append(self.position + rotated)
     pygame.draw.polygon(screen, "white", points, 1)
 
+  def get_polygon(self):
+    return [self.position + point.rotate(self.rotation) for point in self.points]
+
     
   def update(self, dt):
     self.rotate(dt)
