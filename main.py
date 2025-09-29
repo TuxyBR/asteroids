@@ -4,6 +4,10 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from screens.game_over_screen import GameOverScreen
 from screens.game_screen import GameScreen
 from screens.menu_screen import MenuScreen
+from screens.multiplayer_client_game_screen import MultiplayerClientGameScreen
+from screens.multiplayer_host_game_screen import MultiplayerHostGameScreen
+from screens.multiplayer_menu_screen import MultiplayerMenuScreen
+from screens.multiplayer_setup import MultiplayerHostSetupScreen, MultiplayerJoinSetupScreen
 from screens.scoreboard_screen import ScoreboardScreen
 from screens.score_entry_screen import ScoreEntryScreen
 from services.score_manager import should_record
@@ -28,6 +32,22 @@ def switch_screen(transition):
     return MenuScreen()
   if action == "show_scores":
     return ScoreboardScreen()
+  if action == "show_multiplayer_menu":
+    return MultiplayerMenuScreen()
+  if action == "setup_host_game":
+    return MultiplayerHostSetupScreen()
+  if action == "setup_join_game":
+    return MultiplayerJoinSetupScreen()
+  if action == "start_host_game":
+    config = None if payload is None else payload.get("config")
+    if config is None:
+      raise ValueError("Missing multiplayer config for host game")
+    return MultiplayerHostGameScreen(config)
+  if action == "start_client_game":
+    config = None if payload is None else payload.get("config")
+    if config is None:
+      raise ValueError("Missing multiplayer config for client game")
+    return MultiplayerClientGameScreen(config)
 
   raise ValueError(f"Unknown transition action: {action}")
 
