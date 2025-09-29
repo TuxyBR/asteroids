@@ -45,15 +45,15 @@ class Jogador(FormaCirculo):
       if keys[pygame.K_SPACE]:
         self.shoot()
 
-    forward_pressed = keys[pygame.K_w]
-    backward_pressed = keys[pygame.K_s]
+    forward_pressed = keys[pygame.K_w] or keys[pygame.K_UP]
+    backward_pressed = keys[pygame.K_s] or keys[pygame.K_DOWN]
     move_direction = int(forward_pressed) - int(backward_pressed)
 
     self.move(dt, move_direction)
 
-    if keys[pygame.K_a]:
+    if keys[pygame.K_a] or keys[pygame.K_LEFT]:
       self.rotate(-dt)
-    if keys[pygame.K_d]:
+    if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
       self.rotate(dt)
       
   def move(self, dt, direction):
