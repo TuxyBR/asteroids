@@ -3,6 +3,7 @@ import pygame
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, MIN_ASTEROID_RADIUS, MAX_ASTEROID_RADIUS
 from entities.asteroid import Asteroid
+from entities.collision_utils import polygon_collision_mtv
 
 
 class MenuScreen:
@@ -92,29 +93,27 @@ class MenuScreen:
       for j in range(i + 1, total):
         asteroid_b = asteroids[j]
 
-        delta = asteroid_b.position - asteroid_a.position
-        distance = delta.length()
-        min_distance = asteroid_a.radius + asteroid_b.radius
+        points_a = asteroid_a.get_polygon()
+        points_b = asteroid_b.get_polygon()
+        mtv = polygon_collision_mtv(points_a, points_b)
 
-        if distance == 0:
-          delta = pygame.Vector2(random.uniform(-1, 1), random.uniform(-1, 1))
-          distance = delta.length() or 1.0
-
-        if distance >= min_distance:
+        if mtv is None:
           continue
 
-        normal = delta / distance
-        overlap = min_distance - distance
+        normal, overlap = mtv
         correction = normal * (overlap / 2)
         asteroid_a.position -= correction
         asteroid_b.position += correction
 
         relative_velocity = asteroid_a.velocity - asteroid_b.velocity
-        if relative_velocity.length_squared() < 1e-6:
-          impulse_strength = random.uniform(20, 40)
-          impulse = normal * impulse_strength
-          asteroid_a.velocity += impulse
-          asteroid_b.velocity -= impulse
+        toward_speed = relative_velocity.dot(normal)
+
+        if toward_speed <= 0:
+          if abs(toward_speed) < 1e-6:
+            impulse_strength = random.uniform(15, 30)
+            impulse = normal * impulse_strength
+            asteroid_a.velocity -= impulse
+            asteroid_b.velocity += impulse
           continue
 
         asteroid_a.velocity = asteroid_a.velocity.reflect(normal)
