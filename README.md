@@ -4,18 +4,57 @@ A simple Asteroids game using [Pygame](https://www.pygame.org/news) as the engin
 
 ## Requirements
 - [Python](https://www.python.org/) >= 3.12
-- [Pygame](https://www.pygame.org/news) 2.6.1
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) **or** a virtual environment tool of your choice
+- [Mosquitto](https://mosquitto.org/) MQTT broker (for multiplayer)
 
-**Recommended** to use [UV](https://docs.astral.sh/uv/getting-started/installation/)
+## Environment Setup
 
+### 1. Create a Python environment
+
+Using uv (recommended):
 ```bash
-#To test pygame execution inside UV: 
-uv run -m pygame
-#To run the game use:
+uv venv
+source .venv/bin/activate
+```
+
+Using vanilla Python:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
+
+With uv:
+```bash
+uv pip install -r pyproject.toml
+```
+
+With pip:
+```bash
+pip install -r <(uv pip compile pyproject.toml --generate-hashes --quiet)
+```
+or simply:
+```bash
+pip install pygame==2.6.1 paho-mqtt>=1.6.1
+```
+
+### 3. Run an MQTT broker (multiplayer only)
+
+Install Mosquitto and start it locally (default port 1883). For development you can run:
+```bash
+mosquitto -p 50000
+```
+Match the port with the in-game setup screens.
+
+## Running the Game
+
+With uv:
+```bash
 uv run main.py
 ```
 
-If UV is not installed, use Python with Pygame globally installed
+With Python directly:
 ```bash
-python main.py
+python3 main.py
 ```
