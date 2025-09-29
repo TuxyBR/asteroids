@@ -9,7 +9,7 @@ from entities.collision_utils import polygon_collision_mtv
 class MenuScreen:
 
   def __init__(self):
-    self.menu_options = ["Play", "Multiplayer", "Scores", "Quit"] #TODO: implement multiplayer and scores
+    self.menu_options = ["Play", "Multiplayer", "Scores", "Quit"]
     self.selected_option = 0
 
     self.title_font = pygame.font.SysFont("monospace", 72, bold=True)
@@ -31,6 +31,8 @@ class MenuScreen:
       choice = self.menu_options[self.selected_option]
       if choice == "Play":
         return ("start_game", None)
+      if choice == "Multiplayer":
+        return ("show_multiplayer_menu", None)
       if choice == "Scores":
         return ("show_scores", None)
       if choice == "Quit":
