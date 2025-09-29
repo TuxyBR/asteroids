@@ -1,6 +1,14 @@
 import pygame
 from .circle_shape import FormaCirculo
-from constants import PLAYER_RADIUS, PROJECTILE_SPEED, PLAYER_TURN_SPEED, PLAYER_SPEED
+from constants import (
+  PLAYER_ACCELERATION,
+  PLAYER_BACKWARD_ACCELERATION,
+  PLAYER_DECELERATION_MULTIPLIER,
+  PLAYER_RADIUS,
+  PLAYER_SPEED,
+  PLAYER_TURN_SPEED,
+  PROJECTILE_SPEED,
+)
 from entities.shot import Tiro
 
 class Jogador(FormaCirculo):
@@ -9,6 +17,7 @@ class Jogador(FormaCirculo):
     self.rotation = 0
     self.shot_cooldown = 0
     self._paused = False
+    self.velocity = pygame.Vector2()
 
   def triangle(self):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -36,19 +45,42 @@ class Jogador(FormaCirculo):
       if keys[pygame.K_SPACE]:
         self.shoot()
 
-    if keys[pygame.K_w]:
-      self.move(dt)
-    if keys[pygame.K_s]:
-      self.move(-dt)
+    forward_pressed = keys[pygame.K_w]
+    backward_pressed = keys[pygame.K_s]
+    move_direction = int(forward_pressed) - int(backward_pressed)
+
+    self.move(dt, move_direction)
 
     if keys[pygame.K_a]:
       self.rotate(-dt)
     if keys[pygame.K_d]:
       self.rotate(dt)
       
-  def move(self, dt): #TODO: acceleration in movement
+  def move(self, dt, direction):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
-    self.position += forward * PLAYER_SPEED * dt
+
+    if direction != 0:
+      acceleration = PLAYER_ACCELERATION
+      if direction < 0:
+        acceleration *= PLAYER_BACKWARD_ACCELERATION
+      thrust = forward * (acceleration * direction * dt)
+      self.velocity += thrust
+      speed = self.velocity.length()
+      if speed > PLAYER_SPEED:
+        self.velocity.scale_to_length(PLAYER_SPEED)
+    else:
+      speed = self.velocity.length()
+      if speed > 0:
+        deceleration = PLAYER_ACCELERATION * PLAYER_DECELERATION_MULTIPLIER * dt
+        new_speed = max(0, speed - deceleration)
+        if new_speed == 0:
+          self.velocity.update(0, 0)
+        else:
+          self.velocity.scale_to_length(new_speed)
+        if new_speed < 0.01:
+          self.velocity.update(0, 0)
+
+    self.position += self.velocity * dt
     
   def shoot(self):
     shot = Tiro(self.position[0], self.position[1])
