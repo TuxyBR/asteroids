@@ -25,8 +25,9 @@ class GameScreen:
     self.player = Jogador(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
     self.asteroid_field = asteroid_field
     if self.asteroid_field is None:
-      self.asteroid_field = AsteroidField(self.update_group)
+      self.asteroid_field = AsteroidField(self.asteroid_group, self.update_group)
     else:
+      self.asteroid_field.asteroid_group = self.asteroid_group
       self.asteroid_field.add(self.update_group)
 
     self.players = [self.player]

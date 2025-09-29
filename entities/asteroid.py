@@ -38,6 +38,7 @@ class Asteroid(FormaCirculo):
     
   def move(self, dt):
     self.position += self.velocity * dt
+    self.wrap_position()
     
   def rotate(self, dt):
     self.rotation += (self.rotation_speed * dt) % 360

@@ -93,6 +93,7 @@ class Jogador(FormaCirculo):
           self.velocity.update(0, 0)
 
     self.position += self.velocity * dt
+    self.wrap_position()
 
   def _emit_thrust(self, dt, direction):
     forward = pygame.Vector2(0, 1).rotate(self.rotation)
