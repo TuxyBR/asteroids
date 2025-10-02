@@ -19,10 +19,21 @@ from entities.shot import Shot
 from entities.thrust_particle import ThrustParticle
 from entities.player_input import PlayerInputState
 
+
+def color_from_uuid(player_id: str) -> pygame.Color:
+  seed = int(player_id[:8], 16)
+  hue = seed % 360
+  saturation = 75 + (seed % 20)  # keep colors vibrant but distinct
+  value = 85 + (seed // 20 % 15)
+  color = pygame.Color(0)
+  color.hsva = (hue, min(saturation, 100), min(value, 100), 100)
+  return color
+
 class Player(CircleShape):
   def __init__(self, x, y, player_id=None):
     super().__init__(x, y, PLAYER_RADIUS)
     self.player_id = player_id or uuid.uuid4().hex
+    self.color = color_from_uuid(self.player_id)
     self.rotation = 0
     self.shot_cooldown = 0
     self._paused = False
@@ -42,7 +53,7 @@ class Player(CircleShape):
   def draw(self, screen):
     for particle in self.thrust_particles:
       particle.draw(screen)
-    pygame.draw.polygon(screen, "white", self.triangle(), 2)
+    pygame.draw.polygon(screen, self.color, self.triangle(), 2)
 
   def get_polygon(self):
     return self.triangle()
@@ -143,7 +154,7 @@ class Player(CircleShape):
     self.thrust_particles = [particle for particle in self.thrust_particles if not particle.is_dead()]
     
   def shoot(self):
-    shot = Shot(self.position[0], self.position[1])
+    shot = Shot(self.position[0], self.position[1], color=self.color)
     shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PROJECTILE_SPEED
     self.shot_cooldown = 0.3
 
