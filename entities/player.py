@@ -29,6 +29,10 @@ def color_from_uuid(player_id: str) -> pygame.Color:
   color.hsva = (hue, min(saturation, 100), min(value, 100), 100)
   return color
 
+
+def serialize_color(color: pygame.Color) -> list[int]:
+  return [int(color.r), int(color.g), int(color.b), int(color.a)]
+
 class Player(CircleShape):
   def __init__(self, x, y, player_id=None):
     super().__init__(x, y, PLAYER_RADIUS)

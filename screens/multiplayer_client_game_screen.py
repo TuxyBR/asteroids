@@ -241,7 +241,8 @@ class MultiplayerClientGameScreen:
 
     for shot in self.shots.values():
       position = shot["position"]
-      pygame.draw.circle(surface, "white", (int(position.x), int(position.y)), SHOT_RADIUS, 2)
+      color = shot.get("color", (255, 255, 255))
+      pygame.draw.circle(surface, color, (int(position.x), int(position.y)), SHOT_RADIUS, 2)
 
     for explosion in self.remote_explosions.values():
       explosion.draw(surface)
@@ -255,7 +256,8 @@ class MultiplayerClientGameScreen:
       a = player["position"] + forward * PLAYER_RADIUS
       b = player["position"] - forward * PLAYER_RADIUS - right
       c = player["position"] - forward * PLAYER_RADIUS + right
-      pygame.draw.polygon(surface, "white", [(a.x, a.y), (b.x, b.y), (c.x, c.y)], 2)
+      color = player.get("color", (255, 255, 255))
+      pygame.draw.polygon(surface, color, [(a.x, a.y), (b.x, b.y), (c.x, c.y)], 2)
 
     score_surface = self.hud_font.render(f"Score: {self.score}", True, "gray")
     surface.blit(score_surface, (30, surface.get_height() - score_surface.get_height() - 20))
@@ -297,12 +299,19 @@ class MultiplayerClientGameScreen:
       position = pygame.Vector2(*player.get("position", (0.0, 0.0)))
       velocity = pygame.Vector2(*player.get("velocity", (0.0, 0.0)))
       input_state = PlayerInputState.from_dict(player.get("input", {}))
+      color_data = player.get("color")
+      if isinstance(color_data, (list, tuple)) and len(color_data) >= 3:
+        color = tuple(int(color_data[i]) for i in range(3))
+      else:
+        color = (255, 255, 255)
+
       new_players[player_id] = {
         "position": position,
         "rotation": player.get("rotation", 0.0),
         "velocity": velocity,
         "input": input_state,
         "paused": bool(player.get("paused", False)),
+        "color": color,
       }
 
     self.players = new_players
@@ -345,7 +354,12 @@ class MultiplayerClientGameScreen:
       if not shot_id:
         continue
       position = pygame.Vector2(*shot.get("position", (0.0, 0.0)))
-      new_shots[shot_id] = {"position": position}
+      color_data = shot.get("color")
+      if isinstance(color_data, (list, tuple)) and len(color_data) >= 3:
+        color = tuple(int(color_data[i]) for i in range(3))
+      else:
+        color = (255, 255, 255)
+      new_shots[shot_id] = {"position": position, "color": color}
     self.shots = new_shots
 
     effects = state.get("effects", {})

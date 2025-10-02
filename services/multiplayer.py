@@ -16,6 +16,7 @@ from constants import (
     MULTIPLAYER_TOPIC_ROOT,
 )
 from entities.player_input import PlayerInputState
+from entities.player import serialize_color
 
 
 def _vec_to_list(vector) -> list[float]:
@@ -223,6 +224,7 @@ class MultiplayerHostSession:
                 "rotation": player.rotation,
                 "input": player.input_state.to_dict(),
                 "paused": self.game_screen.player_pause_state.get(player.player_id, False),
+                "color": serialize_color(player.color),
             })
 
         asteroids = []
@@ -243,6 +245,7 @@ class MultiplayerHostSession:
                 "id": shot.entity_id,
                 "position": _vec_to_list(shot.position),
                 "velocity": _vec_to_list(shot.velocity),
+                "color": serialize_color(shot.color),
             })
 
         new_explosions = []
