@@ -56,10 +56,8 @@ class MultiplayerHostGameScreen(GameScreen):
     super().draw(surface)
 
     overlay_lines = [
-      f"Hosting session {self.config.session_id}",
-      f"Broker: {self.config.broker}:{self.config.port}",
+      f"Session {self.config.session_id}",
       f"Players: {self.session.remote_player_count() + 1}",
-      "Pause -> Return to Menu to stop hosting",
     ]
 
     respawn_status = self.get_respawn_status()

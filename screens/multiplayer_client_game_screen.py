@@ -260,10 +260,7 @@ class MultiplayerClientGameScreen:
     score_surface = self.hud_font.render(f"Score: {self.score}", True, "gray")
     surface.blit(score_surface, (30, surface.get_height() - score_surface.get_height() - 20))
 
-    info_lines = [
-      f"Broker: {self.config.broker}:{self.config.port}",
-      f"Session: {self.config.session_id}",
-    ]
+    info_lines = []
     if self.player_id:
       info_lines.append(f"You are player {self.player_id}")
     info_lines.append("Press ESC to open the pause menu")
@@ -272,7 +269,7 @@ class MultiplayerClientGameScreen:
       info_lines.append("Waiting for respawn... press any control once ready")
 
     if self.global_pause_menu is not None:
-      info_lines.append("Game paused - waiting for all players")
+      info_lines.append("Game paused")
 
     for index, line in enumerate(info_lines):
       label = self.info_font.render(line, True, "gray")

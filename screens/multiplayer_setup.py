@@ -37,11 +37,11 @@ class _BaseMultiplayerSetupScreen:
     if event.type != pygame.KEYDOWN:
       return None
 
-    if event.key in (pygame.K_UP, pygame.K_w):
+    if event.key in (pygame.K_UP):
       self.selected_index = (self.selected_index - 1) % len(self.fields)
       return None
 
-    if event.key in (pygame.K_DOWN, pygame.K_s):
+    if event.key in (pygame.K_DOWN):
       self.selected_index = (self.selected_index + 1) % len(self.fields)
       return None
 
